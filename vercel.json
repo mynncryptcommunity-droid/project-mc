@@ -1,0 +1,20 @@
+{
+  "buildCommand": "cd mc_frontend && npm install && npm run build",
+  "outputDirectory": "mc_frontend/dist",
+  "installCommand": "npm install -g npm && cd mc_frontend && npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "VITE_MYNNCRYPT_ADDRESS": "@vite_mynncrypt_address",
+    "VITE_MYNNGIFT_ADDRESS": "@vite_mynngift_address",
+    "VITE_WALLETCONNECT_PROJECT_ID": "@vite_walletconnect_project_id",
+    "VITE_NETWORK_ID": "@vite_network_id",
+    "VITE_RPC_URL": "@vite_rpc_url",
+    "VITE_EXPLORER_URL": "@vite_explorer_url",
+    "VITE_PLATFORM_WALLET": "@vite_platform_wallet"
+  }
+}
