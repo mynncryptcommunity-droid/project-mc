@@ -1686,7 +1686,7 @@ useEffect(() => {
   };
 
   const handleCopyLink = () => {
-    const referralLink = `https://project-90nrckjvo-mynncrypts-projects.vercel.app/register?ref=${userId}`;
+    const referralLink = `https://project-mc-tan.vercel.app/register?ref=${userId}`;
     navigator.clipboard.writeText(referralLink).then(() => {
       toast.success('Referral link copied to clipboard!');
     }).catch((err) => {
