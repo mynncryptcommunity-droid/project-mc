@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd mc_frontend && npm install && npm run build",
-  "outputDirectory": "mc_frontend/dist",
-  "installCommand": "npm install -g npm && cd mc_frontend && npm install",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/(.*)",
