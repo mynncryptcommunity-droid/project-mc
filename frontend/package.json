@@ -1,0 +1,60 @@
+{
+  "name": "sfc-dapp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@tanstack/react-query": "^5.77.2",
+    "@vitejs/plugin-react": "^4.5.2",
+    "@walletconnect/ethereum-provider": "^2.20.3",
+    "axios": "^1.9.0",
+    "chart.js": "^4.4.9",
+    "ethers": "^6.14.3",
+    "framer-motion": "^12.16.0",
+    "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.0",
+    "react-d3-tree": "^3.6.6",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0",
+    "react-organizational-chart": "^2.2.1",
+    "react-router-dom": "^7.6.1",
+    "react-toastify": "^11.0.5",
+    "viem": "^2.30.5",
+    "vite": "^6.3.5",
+    "wagmi": "^2.15.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "postcss": "^8.5.3",
+    "stylelint": "^16.19.1",
+    "stylelint-config-standard": "^38.0.0",
+    "tailwindcss": "^3.4.1"
+  },
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sfindup/sfc-dapp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sfindup/sfc-dapp/issues"
+  },
+  "homepage": "https://github.com/sfindup/sfc-dapp#readme"
+}

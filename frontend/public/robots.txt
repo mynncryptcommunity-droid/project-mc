@@ -1,0 +1,26 @@
+# Robots.txt for Mynncrypt
+# Allow search engines to crawl the website
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*.env
+Disallow: /private/
+Disallow: /temp/
+Disallow: /test/
+
+# Crawl delay (optional - add if needed)
+Crawl-delay: 1
+
+# User agents that should not crawl
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+# Sitemap location
+Sitemap: https://mynncrypt.com/sitemap.xml

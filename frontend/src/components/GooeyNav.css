@@ -1,0 +1,141 @@
+.gooey-nav {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.gooey-nav-items {
+  display: flex;
+  gap: 20px;
+  background: rgba(24, 59, 78, 0.5);
+  padding: 6px 20px;
+  border-radius: 40px;
+  border: 1px solid rgba(221, 168, 83, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.1),
+    inset 0 0 20px rgba(221, 168, 83, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.gooey-nav-items::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at center,
+    rgba(221, 168, 83, 0.1) 0%,
+    transparent 70%
+  );
+  animation: rotate 15s linear infinite;
+  pointer-events: none;
+}
+
+.gooey-nav-item {
+  position: relative;
+  padding: 8px 20px;
+  color: #F3F3E0;
+  text-decoration: none;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 0.9rem;
+}
+
+.gooey-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(221, 168, 83, 0.1);
+  border-radius: 40px;
+  transform: scale(0.8);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.gooey-nav-item:hover::before {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.gooey-nav-item.active {
+  background: linear-gradient(45deg, #DDA853, #E5C893);
+  border-radius: 40px;
+  color: #183B4E;
+  font-weight: 600;
+  box-shadow: 
+    0 4px 15px rgba(221, 168, 83, 0.3),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.gooey-nav-item:hover {
+  color: #DDA853;
+  transform: translateY(-1px);
+}
+
+.gooey-nav-item.active:hover {
+  color: #183B4E;
+  transform: translateY(-1px);
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .gooey-nav-items {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 15px;
+  }
+
+  .gooey-nav-item {
+    padding: 6px 15px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .gooey-nav-items {
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 5px;
+    padding: 8px 5px;
+  }
+
+  .gooey-nav-item {
+    min-width: 80px;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
+
+  /* Tambahkan ke CSS Anda */
+  .join-now-desktop { display: block; }
+  @media (max-width: 768px) {
+    .join-now-desktop { display: none; }
+  }
+}

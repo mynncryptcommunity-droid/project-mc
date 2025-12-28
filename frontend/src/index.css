@@ -1,0 +1,382 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
+
+/* Base styles */
+
+/* Background image styles */
+.background-overlay {
+  background-image: url('/newbackground.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.8;
+}
+
+/* Background image styles */
+.background-overlay {
+  background-image: url('/newbackground.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.8;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image: url('/newbackground.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+  opacity: 0.9; /* Increased opacity for more dominant background */
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(24, 59, 78, 0.85); /* sfc-dark-blue with 85% opacity */
+  z-index: -1;
+}
+
+/* Hexagon styles */
+.hexagon-container {
+  width: 180px;
+  height: 200px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.hexagon-container:hover {
+  transform: translateY(-5px);
+}
+
+.hexagon {
+  width: 160px;
+  height: 180px;
+  position: relative;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.hexagon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: 1;
+}
+
+.hexagon-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.logo-container {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 8px;
+}
+
+.logo-container img {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 0 8px rgba(77, 168, 218, 0.6));
+}
+
+.logo-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(77, 168, 218, 0.4) 0%, transparent 70%);
+  animation: pulse 2s infinite;
+}
+
+.text-shadow {
+  text-shadow: 0 0 10px rgba(77, 168, 218, 0.8);
+}
+
+/* Cyberpunk button style for See Tree */
+.cyberpunk-btn {
+  --border-color: linear-gradient(-45deg, #4DA8DA, #0A2472, #0E6BA8);
+  --border-width: 0.125em;
+  --curve-size: 0.5em;
+  --blur: 30px;
+  --bg: #080312;
+  --color: #4DA8DA;
+  color: var(--color);
+  cursor: pointer;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  place-content: center;
+  padding: 0.5em 1.5em;
+  font-size: 14px;
+  border: 0;
+  text-transform: uppercase;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.6);
+  clip-path: polygon(
+    0% var(--curve-size),
+    var(--curve-size) 0,
+    100% 0,
+    100% calc(100% - var(--curve-size)),
+    calc(100% - var(--curve-size)) 100%,
+    0 100%
+  );
+  transition: color 250ms;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.cyberpunk-btn::after,
+.cyberpunk-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.cyberpunk-btn::before {
+  background: var(--border-color);
+  background-size: 300% 300%;
+  animation: move-bg7234 5s ease infinite;
+  z-index: -2;
+}
+
+@keyframes move-bg7234 {
+  0% {
+    background-position: 31% 0%;
+  }
+
+  50% {
+    background-position: 70% 100%;
+  }
+
+  100% {
+    background-position: 31% 0%;
+  }
+}
+
+.cyberpunk-btn::after {
+  background: var(--bg);
+  z-index: -1;
+  clip-path: polygon(
+    var(--border-width) calc(var(--curve-size) + var(--border-width) * 0.5),
+    calc(var(--curve-size) + var(--border-width) * 0.5) var(--border-width),
+    calc(100% - var(--border-width)) var(--border-width),
+    calc(100% - var(--border-width)) calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
+    calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)) calc(100% - var(--border-width)),
+    var(--border-width) calc(100% - var(--border-width))
+  );
+  transition: clip-path 500ms;
+}
+
+.cyberpunk-btn:where(:hover, :focus)::after {
+  clip-path: polygon(
+    calc(100% - var(--border-width)) calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
+    calc(100% - var(--border-width)) var(--border-width),
+    calc(100% - var(--border-width)) var(--border-width),
+    calc(100% - var(--border-width)) calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
+    calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)) calc(100% - var(--border-width)),
+    calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)) calc(100% - var(--border-width))
+  );
+  transition: 200ms;
+}
+
+.cyberpunk-btn:where(:hover, :focus) {
+  color: #fff;
+}
+
+/* Remove old see-tree-btn styles */
+.see-tree-btn {
+  display: none;
+}
+
+/* Control button styles */
+.control-btn {
+  background: linear-gradient(135deg, #0A2472, #0E6BA8);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(77, 168, 218, 0.3);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  text-shadow: 0 0 10px rgba(77, 168, 218, 0.8);
+}
+
+.control-btn:hover {
+  background: linear-gradient(135deg, #0E6BA8, #0A2472);
+  border-color: #4DA8DA;
+  box-shadow: 0 0 15px rgba(77, 168, 218, 0.3);
+}
+
+/* Connection line animation */
+.connection-line {
+  opacity: 0.6;
+  filter: drop-shadow(0 0 3px rgba(77, 168, 218, 0.4));
+  animation: glow 1.5s infinite alternate;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(77, 168, 218, 0.3);
+  border-radius: 50%;
+  border-top-color: #4DA8DA;
+  animation: spin 1s linear infinite;
+}
+
+/* Pulse animation for root node */
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(77, 168, 218, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(77, 168, 218, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(77, 168, 218, 0);
+  }
+}
+
+@keyframes glow {
+  from {
+    opacity: 0.4;
+    filter: drop-shadow(0 0 2px rgba(77, 168, 218, 0.4));
+  }
+  to {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 4px rgba(77, 168, 218, 0.6));
+  }
+}
+
+/* Enhanced Tree Visualization Styles */
+.rd3t-link {
+  stroke: #F5C45E !important;
+  stroke-width: 2px !important;
+  fill: none !important;
+  stroke-opacity: 1 !important;
+}
+
+.tree-link {
+  stroke: #F5C45E !important;
+  stroke-width: 2px !important;
+  fill: none !important;
+  stroke-opacity: 1 !important;
+}
+
+/* Hover effects for links */
+.rd3t-link:hover,
+.tree-link:hover {
+  stroke-width: 3px !important;
+  filter: brightness(1.2);
+}
+
+/* Container styles */
+.rd3t-container {
+  background-color: transparent !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Node styles */
+.rd3t-node {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Link styles */
+.rd3t-link {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Tree wrapper */
+.rd3t-tree-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* SVG container */
+.rd3t-svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Tree connection lines */
+.tree-connections {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.tree-connection {
+  stroke: #F5C45E;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Ensure background is visible */
+.bg-sfc-dark-blue {
+  background-color: #0A1F3D !important;
+}
+
+/* Background with opacity */
+.background-container {
+  position: relative;
+  background-color: #183B4E;
+}
+
+.background-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/newbackground.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.8;
+  z-index: -1;
+}

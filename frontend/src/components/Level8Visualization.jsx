@@ -1,0 +1,1273 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useReadContract, useWatchContractEvent } from 'wagmi';
+import { ethers } from 'ethers';
+import { UsersIcon, ArrowUpCircleIcon, CurrencyDollarIcon, MegaphoneIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+
+// Impor gambar dari folder assets
+import bnbGold from '../assets/bnb-gold.png';
+import avatar from '../assets/avatar.png';
+import promotionRank2 from '../assets/promotion-rank-2.png';
+import promotionRank3 from '../assets/promotion-rank-3.png';
+import promotionRank4 from '../assets/promotion-rank-4.png';
+import promotionRank5 from '../assets/promotion-rank-5.png';
+import promotionRank6 from '../assets/promotion-rank-6.png';
+import promotionRank7 from '../assets/promotion-rank-7.png';
+import promotionRank8 from '../assets/promotion-rank-8.png';
+import platformImg from '../assets/platform.png';
+
+// Untuk animasi spin-coin pada koin bnb-gold, pastikan style CSS global sudah diimport jika style JSX tidak didukung oleh framework.
+
+// Komponen sederhana untuk koin animasi dengan gambar BNB Gold
+const AnimatedCoin = ({ id, startX, startY, endX, endY, onAnimationEnd, duration = 1000 }) => {
+  const [position, setPosition] = useState({ x: startX, y: startY });
+
+  useEffect(() => {
+    if (position.x === endX && position.y === endY) return;
+
+    const startTime = performance.now();
+
+    const animate = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+
+      setPosition({
+        x: startX + (endX - startX) * progress,
+        y: startY + (endY - startY) * progress,
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else if (onAnimationEnd) {
+        onAnimationEnd(id);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [startX, startY, endX, endY, duration, onAnimationEnd, id]);
+
+  return (
+    <g transform={`translate(${position.x}, ${position.y})`} className="animated-coin">
+      <image href={bnbGold} width="100" height="100" x="-50" y="-50" preserveAspectRatio="xMidYMid meet" className="spin-coin" />
+    </g>
+  );
+};
+
+// Komponen untuk animasi user avatar saat promosi rank dengan gambar kustom
+const AnimatedUserMovingIcon = ({ id, startX, startY, endX, endY, onAnimationEnd, duration = 1500, userAddress }) => {
+  const [position, setPosition] = useState({ x: startX, y: startY });
+
+  useEffect(() => {
+    if (position.x === endX && position.y === endY) return;
+
+    const startTime = performance.now();
+
+    const animate = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+
+      setPosition({
+        x: startX + (endX - startX) * progress,
+        y: startY + (endY - startY) * progress,
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else if (onAnimationEnd) {
+        onAnimationEnd(id);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [startX, startY, endX, endY, duration, onAnimationEnd, id]);
+
+  return (
+    <g transform={`translate(${position.x}, ${position.y})`} className="animated-user-moving-icon">
+      <image href={avatar} width="30" height="60" x="-15" y="-30" preserveAspectRatio="xMidYMid meet" />
+      <text x="0" y="40" textAnchor="middle" fill="#F5C45E" fontSize="8">
+        {userAddress ? `${userAddress.slice(0, 4)}...` : ''}
+      </text>
+    </g>
+  );
+};
+
+// Komponen untuk animasi user avatar saat bergabung antrean
+const AnimatedQueueUser = ({ id, startX, startY, endX, endY, onAnimationEnd, duration = 1000, userAddress }) => {
+  const [position, setPosition] = useState({ x: startX, y: startY });
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    const startTime = performance.now();
+
+    const animate = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+
+      setPosition({
+        x: startX + (endX - startX) * progress,
+        y: startY + (endY - startY) * progress - 200,
+      });
+      setOpacity(1 - progress);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else if (onAnimationEnd) {
+        onAnimationEnd(id);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [startX, startY, endX, endY, duration, onAnimationEnd, id]);
+
+  return (
+    <g transform={`translate(${position.x}, ${position.y})`} opacity={opacity} className="animated-queue-user">
+      <image href={avatar} width="31" height="61" x="-15.5" y="-30.5" preserveAspectRatio="xMidYMid meet" />
+      <text x="0" y="35" textAnchor="middle" fill="#102E50" fontSize="8">
+        {userAddress ? `${userAddress.slice(0, 4)}...` : ''}
+      </text>
+    </g>
+  );
+};
+
+const NobleGiftVisualization = ({ mynngiftConfig, userAddress }) => {
+  // State lokal untuk data visualisasi
+  const [ranksData, setRanksData] = useState({});
+  // const [currentRankState, setCurrentRankState] = useState(null);
+  const [animationQueue, setAnimationQueue] = useState([]);
+  const [animatedCoins, setAnimatedCoins] = useState({});
+  const [userPromotingAnimation, setUserPromotingAnimation] = useState(null);
+  const [isProcessingCycle, setIsProcessingCycle] = useState({});
+  const [animatedQueueUsers, setAnimatedQueueUsers] = useState({});
+  const [displayedActivities, setDisplayedActivities] = useState([]);
+  
+  // Multi-Tab UI State
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'level4', 'level8'
+
+  // --- 1. Fungsi koordinat rank ---
+  const getRankCoordinates = useCallback((rank) => {
+    const xLeft = 250;
+    const xRight = 950; // 250 + 700 (consistent with original horizontal spacing)
+    const yBase = 150;
+    const yStep = 550; // (consistent with original vertical spacing)
+
+    let x, y;
+
+    switch (rank) {
+      case 1: x = xLeft; y = yBase; break;
+      case 2: x = xRight; y = yBase; break;
+      case 3: x = xRight; y = yBase + yStep; break;
+      case 4: x = xLeft; y = yBase + yStep; break;
+      case 5: x = xLeft; y = yBase + 2 * yStep; break;
+      case 6: x = xRight; y = yBase + 2 * yStep; break;
+      case 7: x = xRight; y = yBase + 3 * yStep; break;
+      case 8: x = xLeft; y = yBase + 3 * yStep; break;
+      default: x = 0; y = 0; // Fallback for unexpected rank
+    }
+    return { x, y };
+  }, []);
+
+  // --- 2. Hitung posisi wallet setelah fungsi tersedia ---
+  const rank4 = getRankCoordinates(4);
+  const rank5 = getRankCoordinates(5);
+  const rank6 = getRankCoordinates(6);
+  const rank7 = getRankCoordinates(7);
+
+  const promotionWalletX = (rank4.x + rank6.x) / 2;
+  const promotionWalletY = (rank4.y + rank6.y) / 2;
+  const platformWalletX = (rank5.x + rank7.x) / 2;
+  const platformWalletY = (rank5.y + rank7.y) / 2;
+
+  // Perbaiki: gunakan 8x useReadContract secara eksplisit untuk receiver history
+  const { data: receiverHistory1 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [1],
+    enabled: true,
+  });
+  const { data: receiverHistory2 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [2],
+    enabled: true,
+  });
+  const { data: receiverHistory3 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [3],
+    enabled: true,
+  });
+  const { data: receiverHistory4 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [4],
+    enabled: true,
+  });
+  const { data: receiverHistory5 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [5],
+    enabled: true,
+  });
+  const { data: receiverHistory6 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [6],
+    enabled: true,
+  });
+  const { data: receiverHistory7 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [7],
+    enabled: true,
+  });
+  const { data: receiverHistory8 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankReceiverHistory',
+    args: [8],
+    enabled: true,
+  });
+  const receiverHistories = [
+    receiverHistory1 || [],
+    receiverHistory2 || [],
+    receiverHistory3 || [],
+    receiverHistory4 || [],
+    receiverHistory5 || [],
+    receiverHistory6 || [],
+    receiverHistory7 || [],
+    receiverHistory8 || [],
+  ];
+
+     
+
+  // --- 1. Ambil Data Awal dan Real-time dari Kontrak --- //
+
+  // User's NobleGift Rank
+  const { data: nobleGiftRank, refetch: refetchNobleGiftRank } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserRank',
+    args: [userAddress],
+    enabled: !!userAddress,
+  });
+
+  // User's NobleGift Status
+  const { data: nobleGiftStatus, refetch: refetchNobleGiftStatus } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserStatus',
+    args: [userAddress],
+    enabled: !!userAddress,
+  });
+
+  // Ambil nilai MAX_DONORS_PER_RANK dari kontrak
+  const { data: maxDonorsPerRank } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'MAX_DONORS_PER_RANK',
+    enabled: true,
+  });
+
+  // Ambil nilai gasSubsidyPool
+  const { data: gasSubsidyPool, refetch: refetchGasSubsidyPool } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'gasSubsidyPool',
+    enabled: true,
+  });
+
+  // Ambil nilai totalReceivers
+  const { data: totalReceivers, refetch: refetchTotalReceivers } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'totalReceivers',
+    enabled: true,
+  });
+
+  // Tambahkan hook untuk mengambil posisi antrean user
+  const { data: queuePosition } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getWaitingQueuePosition',
+    args: [nobleGiftRank, userAddress],
+    enabled: !!userAddress && !!nobleGiftRank,
+  });
+
+  // Ambil data untuk setiap Rank
+  const rankReads = Array.from({ length: 8 }, (_, i) => {
+    const rank = i + 1;
+    const { data: currentDonors, refetch: refetchCurrentDonors } = useReadContract({
+      ...mynngiftConfig,
+      functionName: 'getRankDonors',
+      args: [rank],
+      enabled: true,
+    });
+    const { data: waitingQueue, refetch: refetchWaitingQueue } = useReadContract({
+      ...mynngiftConfig,
+      functionName: 'getRankWaitingQueue',
+      args: [rank],
+      enabled: true,
+    });
+    const { data: currentRankStatus, refetch: refetchCurrentRankStatus } = useReadContract({
+      ...mynngiftConfig,
+      functionName: 'getCurrentRankStatus',
+      args: [rank],
+      enabled: true,
+    });
+    const { data: queueStatus, refetch: refetchQueueStatus } = useReadContract({
+      ...mynngiftConfig,
+      functionName: 'getQueueStatus',
+      args: [rank],
+      enabled: true,
+    });
+    const { data: rankDonationValue, refetch: refetchRankDonationValue } = useReadContract({
+      ...mynngiftConfig,
+      functionName: 'rankDonationValues',
+      args: [rank],
+      enabled: true,
+    });
+    const { data: currentRankCycle, refetch: refetchCurrentRankCycle } = useReadContract({
+      ...mynngiftConfig,
+      functionName: 'getCurrentRankCycle',
+      args: [rank],
+      enabled: true,
+    });
+
+    return {
+      rank,
+      currentDonors: currentDonors || [],
+      waitingQueue: waitingQueue || [],
+      currentRankStatus: currentRankStatus,
+      queueStatus: queueStatus,
+      rankDonationValue: rankDonationValue,
+      currentRankCycle: currentRankCycle,
+      refetchCurrentDonors,
+      refetchWaitingQueue,
+      refetchCurrentRankStatus,
+      refetchQueueStatus,
+      refetchRankDonationValue,
+      refetchCurrentRankCycle,
+    };
+  });
+
+  useEffect(() => {
+    const newRanksData = {};
+    rankReads.forEach(data => {
+      const isFull = maxDonorsPerRank !== undefined && data.currentDonors.length === Number(maxDonorsPerRank);
+      newRanksData[data.rank] = {
+        donors: data.currentDonors,
+        waitingQueue: data.waitingQueue,
+        totalFunds: data.currentRankStatus ? data.currentRankStatus[1] : BigInt(0),
+        targetFunds: data.currentRankStatus ? data.currentRankStatus[2] : BigInt(0),
+        remainingSlots: data.currentRankStatus ? data.currentRankStatus[3] : 0,
+        queueLength: data.queueStatus ? data.queueStatus[0] : BigInt(0),
+        activeDonorsInQueue: data.queueStatus ? data.queueStatus[1] : BigInt(0),
+        rankDonationValue: data.rankDonationValue,
+        currentRankCycle: data.currentRankCycle,
+        isFull: isFull,
+        refetchDonors: data.refetchCurrentDonors,
+        refetchWaitingQueue: data.refetchWaitingQueue,
+        refetchCurrentRankStatus: data.refetchCurrentRankStatus,
+        refetchQueueStatus: data.refetchQueueStatus,
+        refetchRankDonationValue: data.refetchRankDonationValue,
+        refetchCurrentRankCycle: data.refetchCurrentRankCycle,
+      };
+    });
+    setRanksData(newRanksData);
+
+    if (nobleGiftRank !== undefined && nobleGiftRank !== null && newRanksData[Number(nobleGiftRank)]) {
+      // setCurrentRankState(newRanksData[Number(nobleGiftRank)]);
+    }
+    console.log('Receiver Histories:', receiverHistories);
+    receiverHistories.forEach((history, index) => {
+      console.log(`Rank ${index + 1} Receiver History:`, history);
+      if (history.length > 0) {
+        console.log(`Last Receiver for Rank ${index + 1}:`, history[history.length - 1]);
+      }
+    });
+  }, [nobleGiftRank, maxDonorsPerRank, ...rankReads.flatMap(r => [r.currentDonors, r.waitingQueue, r.currentRankStatus, r.queueStatus, r.rankDonationValue, r.currentRankCycle]), ...receiverHistories]);
+
+  // --- 2. Dengarkan Event Real-time untuk Animasi --- //
+
+  useWatchContractEvent({
+    ...mynngiftConfig,
+    eventName: 'DonationReceived',
+    onLogs(logs) {
+      logs.forEach(async log => {
+        const { donor, rank: eventRank, amount: eventAmount } = log.args;
+        console.log(`DonationReceived: ${donor} donated ${ethers.formatEther(eventAmount)} to Rank ${eventRank}`);
+        const rankInfo = ranksData[Number(eventRank)];
+        if (rankInfo && rankInfo.refetchDonors) {
+          await rankInfo.refetchDonors();
+        }
+        setAnimationQueue(prev => [...prev, { type: 'DONATION', donor, rank: Number(eventRank), amount: eventAmount }]);
+      });
+    },
+  });
+
+  useWatchContractEvent({
+    ...mynngiftConfig,
+    eventName: 'WaitingQueueJoined',
+    onLogs(logs) {
+      logs.forEach(async log => {
+        const { user: eventUser, rank: eventRank } = log.args;
+        console.log(`WaitingQueueJoined: ${eventUser} joined queue for Rank ${eventRank}`);
+        const rankInfo = ranksData[Number(eventRank)];
+        if (rankInfo && rankInfo.refetchWaitingQueue) {
+          await rankInfo.refetchWaitingQueue();
+        }
+        setAnimationQueue(prev => [...prev, { type: 'JOIN_QUEUE', user: eventUser, rank: Number(eventRank) }]);
+      });
+    },
+  });
+
+  useWatchContractEvent({
+    ...mynngiftConfig,
+    eventName: 'ReceiverStatusUpdated',
+    onLogs(logs) {
+      logs.forEach(async log => {
+        const { user: eventUser, rank: receivedRank, amount: eventAmount } = log.args;
+        console.log(`ReceiverStatusUpdated: ${eventUser} received ${ethers.formatEther(eventAmount)} from Rank ${receivedRank}`);
+
+        const rankInfo = ranksData[Number(receivedRank)];
+        if (rankInfo && rankInfo.refetchWaitingQueue) {
+          await rankInfo.refetchWaitingQueue();
+        }
+
+        const oldUserRank = nobleGiftRank ? Number(nobleGiftRank) : 0;
+
+        await refetchNobleGiftStatus();
+        await refetchNobleGiftRank();
+
+        if (eventUser.toLowerCase() === userAddress.toLowerCase() && nobleGiftRank !== undefined && Number(nobleGiftRank) > oldUserRank) {
+          setAnimationQueue(prev => [...prev, { 
+            type: 'USER_RANK_PROMOTE', 
+            user: eventUser, 
+            fromRank: oldUserRank, 
+            toRank: Number(nobleGiftRank) 
+          }]);
+        }
+
+        setAnimationQueue(prev => [...prev, { type: 'RECEIVE_FUNDS', user: eventUser, rank: Number(receivedRank), amount: eventAmount }]);
+      });
+    },
+  });
+
+  useWatchContractEvent({
+    ...mynngiftConfig,
+    eventName: 'RankCycleCompleted',
+    onLogs(logs) {
+      logs.forEach(async log => {
+        const { rank: eventRank, cycleNumber: eventCycleNumber, donors: eventDonors } = log.args;
+        console.log(`RankCycleCompleted: Rank ${eventRank} completed cycle ${eventCycleNumber}`);
+        setIsProcessingCycle(prev => ({ ...prev, [Number(eventRank)]: true }));
+
+        const rankInfo = ranksData[Number(eventRank)];
+        if (rankInfo && rankInfo.refetchDonors && rankInfo.refetchCurrentRankStatus && rankInfo.refetchWaitingQueue) {
+          await rankInfo.refetchDonors();
+          await rankInfo.refetchCurrentRankStatus();
+          await rankInfo.refetchWaitingQueue();
+        }
+        setAnimationQueue(prev => [...prev, { type: 'RANK_CYCLE_COMPLETE', rank: Number(eventRank), cycleNumber: Number(eventCycleNumber), donors: eventDonors }]);
+      });
+    },
+  });
+
+  // --- 3. Logika & Komponen Visualisasi --- //
+
+  useEffect(() => {
+    if (animationQueue.length > 0) {
+      const nextAnimation = animationQueue[0];
+      console.log('Memicu animasi:', nextAnimation.type, nextAnimation);
+
+      const animationId = Date.now().toString();
+      let startX, startY, endX, endY;
+      let coinColor = "#F5C45E";
+
+      switch (nextAnimation.type) {
+        case 'DONATION':
+          startX = 150;
+          startY = 410;
+          {
+            const targetRankCoords = getRankCoordinates(nextAnimation.rank);
+            endX = targetRankCoords.x;
+            endY = targetRankCoords.y - 180;
+          }
+          coinColor = "#F5C45E";
+          setAnimatedCoins(prev => ({
+            ...prev,
+            [animationId]: { startX, startY, endX, endY, color: coinColor, amount: nextAnimation.amount, type: 'DONATION' }
+          }));
+          break;
+        case 'RECEIVE_FUNDS':
+          {
+            const sourceRankCoords = getRankCoordinates(nextAnimation.rank);
+            startX = sourceRankCoords.x;
+            startY = sourceRankCoords.y;
+            endX = 150;
+            endY = 500;
+          }
+          coinColor = "#00FF00";
+          setAnimatedCoins(prev => ({
+            ...prev,
+            [animationId]: { startX, startY, endX, endY, color: coinColor, amount: nextAnimation.amount, type: 'RECEIVE' }
+          }));
+          break;
+        case 'RANK_CYCLE_COMPLETE':
+          {
+            const completedRankCoords = getRankCoordinates(nextAnimation.rank);
+            const totalFunds = ranksData[nextAnimation.rank]?.totalFunds;
+            if (totalFunds) {
+              const promotionShare = (totalFunds * 45n) / 100n;
+              const feeShare = (totalFunds * 5n) / 100n;
+              const receiverShare = (totalFunds * 50n) / 100n;
+
+              setAnimatedCoins(prev => ({
+                ...prev,
+                [`${animationId}-receiver`]: { startX: completedRankCoords.x, startY: completedRankCoords.y, endX: 600, endY: 2400, color: "#00FF00", amount: receiverShare, type: 'RECEIVER_SHARE' }
+              }));
+              setAnimatedCoins(prev => ({
+                ...prev,
+                [`${animationId}-promo`]: { startX: completedRankCoords.x, startY: completedRankCoords.y, endX: promotionWalletX, endY: promotionWalletY, color: "#4DA8DA", amount: promotionShare, type: 'PROMOTION' }
+              }));
+              setAnimatedCoins(prev => ({
+                ...prev,
+                [`${animationId}-plat`]: { startX: completedRankCoords.x, startY: completedRankCoords.y, endX: platformWalletX, endY: platformWalletY, color: "#4DA8DA", amount: feeShare, type: 'PLATFORM' }
+              }));
+            }
+          }
+          break;
+        case 'JOIN_QUEUE':
+          {
+            const queueRankCoords = getRankCoordinates(nextAnimation.rank);
+            const circleRadius = 200; // radius lingkaran rank
+            startX = 150;
+            startY = 500;
+            endX = queueRankCoords.x + circleRadius + 60;
+            endY = queueRankCoords.y;
+          }
+          setAnimatedQueueUsers(prev => ({
+            ...prev,
+            [animationId]: { startX, startY, endX, endY, userAddress: nextAnimation.user }
+          }));
+          break;
+        case 'USER_RANK_PROMOTE':
+          {
+            const fromRankCoords = getRankCoordinates(nextAnimation.fromRank);
+            const toRankCoords = getRankCoordinates(nextAnimation.toRank);
+            setUserPromotingAnimation({
+              id: animationId,
+              startX: fromRankCoords.x,
+              startY: fromRankCoords.y,
+              endX: toRankCoords.x,
+              endY: toRankCoords.y,
+              userAddress: nextAnimation.user
+            });
+          }
+          break;
+      }
+
+      const animationDuration = 2000;
+      const timer = setTimeout(() => {
+        const completedAnimation = animationQueue[0];
+        setAnimationQueue(prev => prev.slice(1));
+        setDisplayedActivities(prev => [completedAnimation, ...prev].slice(0, 15));
+        setAnimatedCoins(prev => {
+          const newCoins = { ...prev };
+          delete newCoins[animationId];
+          delete newCoins[`${animationId}-promo`];
+          delete newCoins[`${animationId}-plat`];
+          delete newCoins[`${animationId}-receiver`];
+          return newCoins;
+        });
+        if (completedAnimation.type === 'USER_RANK_PROMOTE') setUserPromotingAnimation(null);
+        if (completedAnimation.type === 'RANK_CYCLE_COMPLETE') {
+          setIsProcessingCycle(prev => ({ ...prev, [Number(completedAnimation.rank)]: false }));
+          refetchGasSubsidyPool();
+        }
+        if (completedAnimation.type === 'RECEIVE_FUNDS') refetchTotalReceivers();
+      }, animationDuration);
+
+      return () => clearTimeout(timer);
+    }
+  }, [animationQueue, ranksData, getRankCoordinates, userAddress, nobleGiftRank, refetchGasSubsidyPool, refetchTotalReceivers, promotionWalletX, promotionWalletY, platformWalletX, platformWalletY]);
+
+  const handleCoinAnimationEnd = useCallback((id) => {
+    setAnimatedCoins(prev => {
+      const newCoins = { ...prev };
+      delete newCoins[id];
+      return newCoins;
+    });
+  }, []);
+
+  const handleUserPromotionAnimationEnd = useCallback((id) => {
+    if (userPromotingAnimation && userPromotingAnimation.id === id) setUserPromotingAnimation(null);
+  }, [userPromotingAnimation]);
+
+  const handleQueueUserAnimationEnd = useCallback((id) => {
+    setAnimatedQueueUsers(prev => {
+      const newUsers = { ...prev };
+      delete newUsers[id];
+      return newUsers;
+    });
+  }, []);
+
+  const getNobleGiftRankName = useCallback((rank) => {
+    const nobleGiftRankNames = {
+      1: 'Squire', 2: 'Knight', 3: 'Baron', 4: 'Viscount',
+      5: 'Earl', 6: 'Marquis', 7: 'Duke', 8: 'Archon',
+    };
+    return nobleGiftRankNames[rank] || 'N/A';
+  }, []);
+
+  // Fungsi untuk mendapatkan gambar berdasarkan rank
+  const getPromotionImage = (rank) => {
+    switch (rank) {
+      case 2: return promotionRank2;
+      case 3: return promotionRank3;
+      case 4: return promotionRank4;
+      case 5: return promotionRank5;
+      case 6: return promotionRank6;
+      case 7: return promotionRank7;
+      case 8: return promotionRank8;
+      default: return promotionRank2; // Default fallback untuk rank 1 atau undefined
+    }
+  };
+
+  return (
+    <div className="noblegift-visualization-container bg-gradient-to-b from-[#1A3A6A] to-[#102E50] p-4 sm:p-8 rounded-xl shadow-2xl min-h-0 flex flex-col items-center justify-center w-full">
+      {/* Header dengan Gradient */}
+      <div className="w-full text-center mb-8">
+        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F5C45E] via-[#E78B48] to-[#F5C45E] bg-clip-text text-transparent mb-2 drop-shadow-lg">🏆 Perjalanan MynnGift</h2>
+        <div className="h-1 w-24 bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] rounded-full mx-auto"></div>
+      </div>
+
+      {/* Multi-Tab Navigation */}
+      <div className="w-full max-w-2xl mb-6 flex gap-2 sm:gap-3 justify-center flex-wrap">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 sm:px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
+            activeTab === 'overview'
+              ? 'bg-gradient-to-r from-[#F5C45E] to-[#E78B48] text-[#102E50] shadow-lg scale-105'
+              : 'bg-[#102E50] text-[#F5C45E] border border-[#4DA8DA]/40 hover:border-[#4DA8DA]/70 hover:bg-[#1A3A6A]'
+          }`}
+        >
+          📊 Overview (All Ranks)
+        </button>
+        <button
+          onClick={() => setActiveTab('level4')}
+          className={`px-4 sm:px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
+            activeTab === 'level4'
+              ? 'bg-gradient-to-r from-[#4DA8DA] to-[#00FF88] text-[#102E50] shadow-lg scale-105'
+              : 'bg-[#102E50] text-[#4DA8DA] border border-[#4DA8DA]/40 hover:border-[#4DA8DA]/70 hover:bg-[#1A3A6A]'
+          }`}
+        >
+          💎 Level 4 (Viscount)
+        </button>
+        <button
+          onClick={() => setActiveTab('level8')}
+          className={`px-4 sm:px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
+            activeTab === 'level8'
+              ? 'bg-gradient-to-r from-[#FFD700] to-[#F5C45E] text-[#102E50] shadow-lg scale-105'
+              : 'bg-[#102E50] text-[#FFD700] border border-[#4DA8DA]/40 hover:border-[#4DA8DA]/70 hover:bg-[#1A3A6A]'
+          }`}
+        >
+          👑 Level 8 (Archon)
+        </button>
+      </div>
+
+      {/* Content Area - Dynamic based on Active Tab */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Tampilan Ringkasan Status Anda - Enhanced */}
+          <div className="user-status-summary text-white mb-8 p-6 bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] rounded-xl shadow-xl border border-[#4DA8DA]/40 w-full max-w-2xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300 ease-out">
+            {/* Status Row */}
+            <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
+              <div className="text-center sm:text-left">
+                <p className="text-gray-400 text-sm mb-1">Status Anda</p>
+                <p className="text-lg font-semibold text-[#4DA8DA]">{nobleGiftStatus || 'Memuat...'}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-400 text-sm mb-1">Rank Anda</p>
+                <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank ? `${getNobleGiftRankName(Number(nobleGiftRank))} (Rank ${nobleGiftRank})` : 'Memuat...'}</p>
+              </div>
+              <div className="text-center sm:text-right">
+                <p className="text-gray-400 text-sm mb-1">Antrian</p>
+                <p className="text-lg font-semibold text-[#FFD700]">{queuePosition && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'n/a'}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-[#4DA8DA]/20 pt-4"></div>
+
+        {/* Gas Subsidy Pool - Enhanced */}
+        {gasSubsidyPool !== undefined && (
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-3">
+              <p className="text-sm font-semibold text-[#4DA8DA]">💰 Gas Subsidy Pool</p>
+              <span className="text-lg font-bold text-[#F5C45E]">{ethers.formatEther(gasSubsidyPool)} opBNB</span>
+            </div>
+
+            {/* Enhanced Progress Bar with Gradient */}
+            <div className="relative w-full bg-gradient-to-r from-[#1A3A6A] to-[#102E50] rounded-full h-6 border border-[#4DA8DA]/30 overflow-hidden shadow-inner">
+              {/* Animated gradient fill */}
+              <div
+                className="h-full rounded-full transition-all duration-700 ease-out shadow-lg"
+                style={{
+                  width: `${Math.min((Number(ethers.formatEther(gasSubsidyPool)) / MAX_GAS_SUBSIDY_POOL_TARGET) * 100, 100)}%`,
+                  backgroundImage: 'linear-gradient(90deg, #4DA8DA, #00FF88, #FFD700, #F5C45E)',
+                  boxShadow: '0 0 20px rgba(77, 168, 218, 0.8), inset 0 0 10px rgba(0, 255, 136, 0.4)'
+                }}
+              ></div>
+
+              {/* Milestone Markers */}
+              <div className="absolute inset-0 flex w-full h-full">
+                {[25, 50, 75, 100].map((milestone) => (
+                  <div
+                    key={milestone}
+                    className="flex-1 border-r border-[#4DA8DA]/20 last:border-r-0"
+                    style={{ width: '25%' }}
+                  >
+                    <div className="flex items-center justify-center h-full text-white text-xs font-bold opacity-60">
+                      {milestone}%
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Progress Info */}
+            <div className="mt-3 flex justify-between items-center text-xs">
+              <span className="text-gray-400">Target: {MAX_GAS_SUBSIDY_POOL_TARGET} opBNB</span>
+              <span className="text-[#00FF88] font-semibold">
+                {Math.min((Number(ethers.formatEther(gasSubsidyPool)) / MAX_GAS_SUBSIDY_POOL_TARGET) * 100, 100).toFixed(1)}% Selesai
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Total Receivers */}
+        {totalReceivers !== undefined && (
+          <div className="mt-4 text-center p-3 bg-[#4DA8DA]/10 rounded-lg">
+            <p className="text-sm">Total Penerima: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
+          </div>
+        )}
+      </div>
+
+      {/* Area SVG untuk Visualisasi Alur Rank - Enhanced */}
+      <div className="relative w-full max-w-4xl mx-auto bg-gradient-to-b from-[#102E50] to-[#0A1E2E] rounded-xl border border-[#4DA8DA]/40 overflow-hidden flex flex-col items-center justify-center aspect-[3/6] min-h-0 shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">
+        <svg className="w-full h-full" viewBox="0 -200 1200 2400" preserveAspectRatio="xMidYMid meet">
+          {/* Definisi gradien untuk visualisasi */}
+          <defs>
+            <linearGradient id="rankGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4DA8DA" />
+              <stop offset="100%" stopColor="#F5C45E" />
+            </linearGradient>
+            <linearGradient id="userRankGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#F5C45E" />
+              <stop offset="100%" stopColor="#E78B48" />
+            </linearGradient>
+            <linearGradient id="fullRankGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#00FF00" />
+              <stop offset="100%" stopColor="#4CAF50" />
+            </linearGradient>
+            <linearGradient id="rankGradientLux" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1A3A6A" />
+              <stop offset="60%" stopColor="#4DA8DA" />
+              <stop offset="100%" stopColor="#FFD700" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="dropShadow">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+              <feOffset dx="4" dy="4" result="offsetBlur" />
+              <feMerge>
+                <feMergeNode in="offsetBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="glowLux">
+              <feGaussianBlur stdDeviation="16" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <pattern id="bgPattern" width="60" height="60" patternUnits="userSpaceOnUse">
+              <circle cx="30" cy="30" r="2" fill="#4DA8DA" opacity="0.08" />
+              <rect x="0" y="0" width="60" height="60" fill="none" stroke="#4DA8DA" strokeWidth="0.5" opacity="0.04" />
+            </pattern>
+          </defs>
+
+          {/* Representasi user statis */}
+          <g transform="translate(150, 400)" className="user-avatar-container">
+            <image href={bnbGold} width="80" height="80" x="-40" y="-40" preserveAspectRatio="xMidYMid meet" />
+            <text x="0" y="45" textAnchor="middle" fill="#F5C45E" fontSize="12">
+              {userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : 'Your Wallet'}
+            </text>
+          </g>
+
+          {/* Garis penghubung antar Rank */}
+          {Array.from({ length: 8 }).map((_, i) => {
+            const rank = i + 1;
+            const circleRadius = 200;
+            if (rank < 8) {
+              const currentRankCoords = getRankCoordinates(rank);
+              const nextRankCoords = getRankCoordinates(rank + 1);
+              let pathD = "";
+
+              switch (rank) {
+                case 1: // Rank 1 (left) to Rank 2 (right) - Horizontal
+                case 5: // Rank 5 (left) to Rank 6 (right) - Horizontal
+                  pathD = `M ${currentRankCoords.x + circleRadius} ${currentRankCoords.y} L ${nextRankCoords.x - circleRadius} ${nextRankCoords.y}`;
+                  break;
+                case 3: // Rank 3 (right) to Rank 4 (left) - Horizontal
+                case 7: // Rank 7 (right) to Rank 8 (left) - Horizontal
+                  pathD = `M ${currentRankCoords.x - circleRadius} ${currentRankCoords.y} L ${nextRankCoords.x + circleRadius} ${nextRankCoords.y}`;
+                  break;
+                case 2: // Rank 2 (right) to Rank 3 (right) - Vertical
+                case 4: // Rank 4 (left) to Rank 5 (left) - Vertical
+                case 6: // Rank 6 (right) to Rank 7 (right) - Vertical
+                  pathD = `M ${currentRankCoords.x} ${currentRankCoords.y + circleRadius} L ${nextRankCoords.x} ${nextRankCoords.y - circleRadius}`;
+                  break;
+                default:
+                  pathD = "";
+              }
+
+              return (
+                <path
+                  key={`line-${rank}`}
+                  d={pathD}
+                  stroke="#4DA8DA" strokeWidth="2" strokeDasharray="8 8" strokeDashoffset="0">
+                  <animate attributeName="stroke-dashoffset" values="0;16" dur="1.2s" repeatCount="indefinite" />
+                </path>
+              );
+            }
+            return null;
+          })}
+
+          {Array.from({ length: 8 }).map((_, i) => {
+            const rank = i + 1;
+            const rankInfo = ranksData[rank];
+            const isUserCurrentRank = nobleGiftRank && Number(nobleGiftRank) === rank;
+            const isRankProcessing = isProcessingCycle[rank];
+            const col = (rank - 1) % 2;
+            const row = Math.floor((rank - 1) / 2);
+            const x = 250 + col * 700;
+            const y = 150 + row * 550;
+            const circleRadius = 200;
+            const slotRadius = 35;
+            const slotPositions = [
+              { dx: 0, dy: -140 }, { dx: 120, dy: -70 }, { dx: 120, dy: 70 },
+              { dx: 0, dy: 140 }, { dx: -120, dy: 70 }, { dx: -120, dy: -70 }
+            ];
+            // Ambil penerima terakhir dari receiverHistories
+            const receiverHistory = receiverHistories[i];
+            const lastReceiver = receiverHistory && receiverHistory.length > 0 ? receiverHistory[receiverHistory.length - 1] : null;
+
+            let displayedRank = rank;
+            if (rank === 3) {
+              displayedRank = 4;
+            } else if (rank === 4) {
+              displayedRank = 3;
+            } else if (rank === 7) {
+              displayedRank = 8;
+            } else if (rank === 8) {
+              displayedRank = 7;
+            }
+
+            return (
+              <g key={rank} transform={`translate(${x}, ${y})`}>
+                {lastReceiver && (
+                  <g>
+                    <image
+                      href={avatar}
+                      x={-30}
+                      y={-circleRadius-80}
+                      width={60}
+                      height={60}
+                      style={{ filter: 'drop-shadow(0 0 8px #FFD700)' }}
+                    />
+                    <text
+                      x="0"
+                      y={-circleRadius-30}
+                      textAnchor="middle"
+                      fill="#FFD700"
+                      fontSize="18"
+                      fontWeight="bold"
+                      filter="url(#glowLux)"
+                    >
+                      {lastReceiver.slice(0, 6)}...
+                    </text>
+                  </g>
+                )}
+                <circle
+                  cx="0" cy="0" r={circleRadius}
+                  fill={isUserCurrentRank ? 'url(#userRankGlow)' :
+                        (isRankProcessing ? 'rgba(245, 196, 94, 0.2)' :
+                        (rankInfo?.isFull ? 'url(#fullRankGlow)' : 'url(#rankGradientLux)'))}
+                  stroke={isUserCurrentRank ? '#FFD700' :
+                          (isRankProcessing ? '#E78B48' :
+                          (rankInfo?.isFull ? '#FFD700' : '#4DA8DA'))}
+                  strokeWidth={isUserCurrentRank ? '7' : (isRankProcessing || rankInfo?.isFull ? '5' : '3')}
+                  filter={isUserCurrentRank ? 'url(#glowLux)' : (rankInfo?.isFull ? 'url(#glowLux)' : 'url(#dropShadow)')}
+                  className={isUserCurrentRank ? 'animate-pulse-lux' : 'transition-all duration-300 ease-in-out transform hover:scale-105'}
+                />
+                <ellipse cx="0" cy={-circleRadius/2} rx={circleRadius*0.7} ry={circleRadius*0.25} fill="#fff" opacity="0.13" />
+                {isUserCurrentRank && (
+                  <g transform="translate(0, -240)">
+                    <text x="0" y="0" textAnchor="middle" fontSize="48" fill="#FFD700" filter="url(#glowLux)">👑</text>
+                  </g>
+                )}
+                {rank === 8 && (
+                  <g>
+                    <text x="0" y={-circleRadius-30} textAnchor="middle" fontSize="32" fill="#FFD700" opacity="0.7">★</text>
+                    <text x="0" y={-circleRadius-60} textAnchor="middle" fontSize="18" fill="#FFD700" opacity="0.5">LUX</text>
+                  </g>
+                )}
+                {rankInfo?.isFull && (
+                  <text x="0" y={circleRadius-30} textAnchor="middle" fontSize="22" fill="#FFD700" fontWeight="bold" filter="url(#glowLux)">Full</text>
+                )}
+                <title>{`Rank ${displayedRank}\nDonatur: ${rankInfo?.donors?.length || 0}\nAntrean: ${rankInfo?.waitingQueue?.length || 0}\nDana: ${rankInfo?.totalFunds ? ethers.formatEther(rankInfo.totalFunds) : 0} opBNB`}</title>
+                <text x="0" y="-40" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#102E50' : '#F5C45E'} fontSize="36" fontWeight="bold">
+                  Rank {displayedRank}
+                </text>
+                {/* Background untuk text agar lebih readable */}
+                <rect x="-80" y="-18" width="160" height="40" fill="#102E50" opacity="0.7" rx="8" ry="8" />
+                <text x="0" y="10" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#FFD700' : '#F5C45E'} fontSize="28" fontWeight="bold" fontFamily="monospace">
+                  {rankInfo?.rankDonationValue ? `${ethers.formatEther(rankInfo.rankDonationValue)} opBNB` : 'Memuat...'}
+                </text>
+                {maxDonorsPerRank !== undefined && (
+                  <text x="0" y="60" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#102E50' : '#F5C45E'} fontSize="20">
+                    {rankInfo?.donors ? `${rankInfo.donors.length}/${Number(maxDonorsPerRank)} Slots` : 'Memuat...'}
+                  </text>
+                )}
+                {slotPositions.map((pos, idx) => {
+                  const donorAddress = rankInfo?.donors[idx];
+                  const isCurrentUserDonor = donorAddress && userAddress && donorAddress.toLowerCase() === userAddress.toLowerCase();
+                  return (
+                    <g key={idx} transform={`translate(${pos.dx}, ${pos.dy})`}>
+                      <circle
+                        cx="0" cy="0" r={slotRadius}
+                        fill={donorAddress ? (isCurrentUserDonor ? '#00FF00' : '#E78B48') : '#335580'}
+                        stroke="#F5C45E" strokeWidth="1"
+                      />
+                      {donorAddress && (
+                        <>
+                          <image href={avatar} width="28" height="28" x="-14" y="-14" preserveAspectRatio="xMidYMid meet" />
+                          <text x="0" y="20" textAnchor="middle" fill="#102E50" fontSize="16">
+                            {`${donorAddress.slice(0, 4)}...`}
+                          </text>
+                        </>
+                      )}
+                    </g>
+                  );
+                })}
+                {rankInfo && rankInfo.waitingQueue.length > 0 && (
+                  <g transform={`translate(${circleRadius + 60}, 0)`}>
+                    <text x="0" y="-40" fill="#4DA8DA" fontSize="18">Antrean:</text>
+                    {rankInfo.waitingQueue.map((user, idx) => (
+                      <g key={user} transform={`translate(${idx * 45}, -15)`}>
+                        <image href={avatar} width="31" height="61" x="-15.5" y="-30.5" preserveAspectRatio="xMidYMid meet" />
+                        <text x="0" y="35" textAnchor="middle" fill="#F5C45E" fontSize="14">
+                          {`${user.slice(0, 4)}...`}
+                        </text>
+                      </g>
+                    ))}
+                  </g>
+                )}
+                {/* Tambahkan slot penerima di tengah lingkaran rank */}
+                {lastReceiver && (
+                  <g>
+                    <circle cx="0" cy="0" r={60} fill="#00FF00" stroke="#F5C45E" strokeWidth="3" filter="url(#glowLux)" />
+                    <image href={avatar} width="60" height="60" x="-30" y="-30" preserveAspectRatio="xMidYMid meet" />
+                    <text x="0" y="50" textAnchor="middle" fill="#102E50" fontSize="18">
+                      {lastReceiver.slice(0, 8)}...
+                    </text>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Ikon Wallet (Promotion dan Platform) */}
+          <g transform={`translate(${promotionWalletX}, ${promotionWalletY})`}>
+            <image
+              href={nobleGiftRank && nobleGiftRank >= 2 ? getPromotionImage(Number(nobleGiftRank)) : promotionRank2}
+              width="150"
+              height="150"
+              x="-75"
+              y="-75"
+              preserveAspectRatio="xMidYMid meet"
+              filter="url(#dropShadow)"
+            />
+            <text x="0" y="80" textAnchor="middle" fill="#4DA8DA" fontSize="14">
+              {nobleGiftRank ? getNobleGiftRankName(Number(nobleGiftRank)) : 'Promotion'}
+            </text>
+          </g>
+          <g transform={`translate(${platformWalletX}, ${platformWalletY})`}>
+            <image
+              href={platformImg}
+              width="150"
+              height="150"
+              x="-75"
+              y="-75"
+              preserveAspectRatio="xMidYMid meet"
+              filter="url(#dropShadow)"
+            />
+            <text x="0" y="80" textAnchor="middle" fill="#4DA8DA" fontSize="14">Platform</text>
+          </g>
+
+          {/* Render koin animasi yang sedang berjalan */}
+          {Object.entries(animatedCoins).map(([id, coin]) => (
+            <AnimatedCoin
+              key={id}
+              id={id}
+              startX={coin.startX}
+              startY={coin.startY}
+              endX={coin.endX}
+              endY={coin.endY}
+              duration={1500}
+              onAnimationEnd={handleCoinAnimationEnd}
+            />
+          ))}
+
+          {/* Render animasi promosi user jika aktif */}
+          {userPromotingAnimation && (
+            <AnimatedUserMovingIcon
+              id={userPromotingAnimation.id}
+              startX={userPromotingAnimation.startX}
+              startY={userPromotingAnimation.startY}
+              endX={userPromotingAnimation.endX}
+              endY={userPromotingAnimation.endY}
+              userAddress={userPromotingAnimation.userAddress}
+              onAnimationEnd={handleUserPromotionAnimationEnd}
+            />
+          )}
+
+          {/* Render animasi user masuk antrean jika aktif */}
+          {Object.entries(animatedQueueUsers).map(([id, userAnim]) => (
+            <AnimatedQueueUser
+              key={id}
+              id={id}
+              startX={userAnim.startX}
+              startY={userAnim.startY}
+              endX={userAnim.endX}
+              endY={userAnim.endY}
+              userAddress={userAnim.userAddress}
+              onAnimationEnd={handleQueueUserAnimationEnd}
+            />
+          ))}
+
+          {/* Background pattern SVG */}
+          <rect x="100" y="200" width="1000" height="2200" fill="url(#bgPattern)" />
+        </svg>
+          {/* Notifikasi Animasi dengan Styling yang Lebih Baik */}
+          {animationQueue.length > 0 && (
+            <div xmlns="http://www.w3.org/1999/xhtml" className="absolute bottom-6 right-6 px-6 py-4 rounded-xl text-white text-lg font-semibold shadow-2xl animate-bounce border-l-4 backdrop-blur-sm"
+              style={{
+                backgroundColor: animationQueue[0].type === 'DONATION' ? 'rgba(212, 175, 55, 0.95)' :
+                               animationQueue[0].type === 'RECEIVE_FUNDS' ? 'rgba(0, 255, 136, 0.95)' :
+                               animationQueue[0].type === 'JOIN_QUEUE' ? 'rgba(77, 168, 218, 0.95)' :
+                               animationQueue[0].type === 'RANK_CYCLE_COMPLETE' ? 'rgba(255, 215, 0, 0.95)' :
+                               animationQueue[0].type === 'USER_RANK_PROMOTE' ? 'rgba(138, 43, 226, 0.95)' : 'rgba(77, 168, 218, 0.95)',
+                borderColor: animationQueue[0].type === 'DONATION' ? '#F5C45E' :
+                            animationQueue[0].type === 'RECEIVE_FUNDS' ? '#00FF88' :
+                            animationQueue[0].type === 'JOIN_QUEUE' ? '#4DA8DA' :
+                            animationQueue[0].type === 'RANK_CYCLE_COMPLETE' ? '#FFD700' :
+                            animationQueue[0].type === 'USER_RANK_PROMOTE' ? '#8A2BE2' : '#4DA8DA'
+              }}
+            >
+              {animationQueue[0].type === 'DONATION' && `💛 Donasi diterima dari ${animationQueue[0].donor ? animationQueue[0].donor.slice(0, 6) : '-'}...`}
+              {animationQueue[0].type === 'RECEIVE_FUNDS' && `✅ Dana diterima oleh ${animationQueue[0].user ? animationQueue[0].user.slice(0, 6) : '-'}...`}
+              {animationQueue[0].type === 'JOIN_QUEUE' && `🚶 Antrean bergabung dari ${animationQueue[0].user ? animationQueue[0].user.slice(0, 6) : '-'}...`}
+              {animationQueue[0].type === 'RANK_CYCLE_COMPLETE' && `🏁 Siklus Rank ${animationQueue[0].rank} selesai!`}
+              {animationQueue[0].type === 'USER_RANK_PROMOTE' && `🏆 Selamat! Naik ke Rank ${animationQueue[0].toRank}!`}
+            </div>
+          )}
+      </div>
+        </>
+      )}
+
+      {/* Level 4 Detail View */}
+      {activeTab === 'level4' && (
+        <div className="w-full max-w-2xl">
+          <div className="text-white mb-6 p-6 bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] rounded-xl shadow-xl border border-[#4DA8DA]/40">
+            <h3 className="text-2xl font-bold text-[#4DA8DA] mb-4">💎 Level 4 - Viscount Details</h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA]">
+                <p className="text-sm text-gray-400 mb-1">Status di Level 4</p>
+                <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank && Number(nobleGiftRank) >= 4 ? 'Aktif' : 'Belum Tercapai'}</p>
+              </div>
+              {ranksData[4] && (
+                <>
+                  <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA]">
+                    <p className="text-sm text-gray-400 mb-1">Total Dana Terkumpul</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.totalFunds ? ethers.formatEther(ranksData[4].totalFunds) : 'Memuat...'} opBNB</p>
+                  </div>
+                  <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA]">
+                    <p className="text-sm text-gray-400 mb-1">Donatur Aktif</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.donors?.length || 0} / {maxDonorsPerRank}</p>
+                  </div>
+                  <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA]">
+                    <p className="text-sm text-gray-400 mb-1">Penerima Menunggu</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.waitingQueue?.length || 0} orang</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Level 8 Detail View */}
+      {activeTab === 'level8' && (
+        <div className="w-full max-w-2xl">
+          <div className="text-white mb-6 p-6 bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] rounded-xl shadow-xl border border-[#4DA8DA]/40">
+            <h3 className="text-2xl font-bold text-[#FFD700] mb-4">👑 Level 8 - Archon Details</h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#FFD700]">
+                <p className="text-sm text-gray-400 mb-1">Status di Level 8</p>
+                <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank && Number(nobleGiftRank) >= 8 ? 'Aktif' : 'Belum Tercapai'}</p>
+              </div>
+              {ranksData[8] && (
+                <>
+                  <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#FFD700]">
+                    <p className="text-sm text-gray-400 mb-1">Total Dana Terkumpul</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.totalFunds ? ethers.formatEther(ranksData[8].totalFunds) : 'Memuat...'} opBNB</p>
+                  </div>
+                  <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#FFD700]">
+                    <p className="text-sm text-gray-400 mb-1">Donatur Aktif</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.donors?.length || 0} / {maxDonorsPerRank}</p>
+                  </div>
+                  <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#FFD700]">
+                    <p className="text-sm text-gray-400 mb-1">Penerima Menunggu</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.waitingQueue?.length || 0} orang</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Area untuk Menampilkan Histori Event MynnGift Terakhir - Enhanced (Shared across all tabs) */}
+      <div className="recent-events mt-8 w-full max-w-4xl bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">
+        <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">📊 Aktivitas MynnGift Terakhir</h3>
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {displayedActivities.length > 0 ? (
+            displayedActivities.map((anim, index) => (
+              <div key={index} className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA] hover:bg-[#1A3A6A] transition-colors duration-200 text-sm text-gray-200">
+                {anim.type === 'DONATION' && `💛 Donor ${anim.donor ? anim.donor.slice(0,6) : '-'}...${anim.donor ? anim.donor.slice(-4) : ''} berdonasi ke Rank ${anim.rank} (${ethers.formatEther(anim.amount)} opBNB)`}
+                {anim.type === 'JOIN_QUEUE' && `🚶 User ${anim.user ? anim.user.slice(0,6) : '-'}...${anim.user ? anim.user.slice(-4) : ''} masuk antrean Rank ${anim.rank}`}
+                {anim.type === 'RECEIVE_FUNDS' && `✅ User ${anim.user ? anim.user.slice(0,6) : '-'}...${anim.user ? anim.user.slice(-4) : ''} menerima ${ethers.formatEther(anim.amount)} opBNB dari Rank ${anim.rank}`}
+                {anim.type === 'RANK_CYCLE_COMPLETE' && `🎯 Siklus Rank ${anim.rank} selesai.`}
+                {anim.type === 'USER_RANK_PROMOTE' && `🏆 User ${anim.user ? anim.user.slice(0,6) : '-'}... berhasil promosi ke Rank ${anim.toRank}.`}
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-500 py-8">📭 Tidak ada aktivitas baru...</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Define a target for the gas subsidy pool progress bar
+const MAX_GAS_SUBSIDY_POOL_TARGET = 10; // In opBNB, adjust as needed
+
+export default NobleGiftVisualization;
+
+<style>
+{`
+@keyframes spin-coin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(77, 168, 218, 0.8); }
+  50% { box-shadow: 0 0 30px rgba(77, 168, 218, 1); }
+}
+
+@keyframes slide-in {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.spin-coin {
+  animation: spin-coin 1.2s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+.user-status-summary {
+  animation: slide-in 0.6s ease-out;
+}
+
+.recent-events {
+  animation: slide-in 0.8s ease-out;
+}
+
+.recent-events li, .recent-events div {
+  transition: all 0.3s ease;
+}
+
+.recent-events li:hover, .recent-events div:hover {
+  transform: translateX(4px);
+}
+
+/* Smooth scrollbar for recent activities */
+.recent-events::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-events::-webkit-scrollbar-track {
+  background: rgba(77, 168, 218, 0.1);
+  border-radius: 10px;
+}
+
+.recent-events::-webkit-scrollbar-thumb {
+  background: rgba(77, 168, 218, 0.5);
+  border-radius: 10px;
+}
+
+.recent-events::-webkit-scrollbar-thumb:hover {
+  background: rgba(77, 168, 218, 0.8);
+}
+
+/* Card hover effects */
+.user-status-summary:hover,
+.recent-events:hover {
+  transform: translateY(-2px);
+}
+
+/* Progress bar shimmer effect */
+@keyframes progress-shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .noblegift-visualization-container {
+    padding: 12px;
+  }
+  
+  .user-status-summary {
+    padding: 12px;
+  }
+  
+  .recent-events {
+    padding: 12px;
+  }
+}
+`}
+</style>
