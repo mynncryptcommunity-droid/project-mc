@@ -151,10 +151,7 @@ const DashboardAdmin = ({ mynncryptConfig, mynngiftConfig, publicClient }) => {
           </div>
           <p className="mb-6 text-[#E78B48]">Wallet ini tidak terdaftar sebagai admin atau investor.</p>
           <div className="space-y-2">
-            <a href="/admin-debug" className="block px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-[#243DB6] to-[#102E50] text-[#F5C45E] shadow-lg hover:from-[#F5C45E] hover:to-[#E78B48] hover:text-[#102E50] transition-all duration-200 border-2 border-[#243DB6]">
-              Debug Console
-            </a>
-            <a href="/" className="block px-6 py-2 rounded-lg font-semibold bg-gray-600 text-white shadow-lg hover:bg-gray-700 transition-all duration-200 border-2 border-gray-600">
+            <a href="/" className="block px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-[#243DB6] to-[#102E50] text-[#F5C45E] shadow-lg hover:from-[#F5C45E] hover:to-[#E78B48] hover:text-[#102E50] transition-all duration-200 border-2 border-[#243DB6]">
               Kembali ke Beranda
             </a>
           </div>

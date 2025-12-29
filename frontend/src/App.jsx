@@ -13,7 +13,6 @@ import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
 import Register from './components/Register';
 import DashboardAdmin from './pages/dashboardadmin';
-import AdminDebugPage from './pages/AdminDebugPage';
 import mynncryptAbiRaw from './abis/MynnCrypt.json';
 import mynngiftAbiRaw from './abis/MynnGift.json';
 import HowItWorks from './components/HowItWorks';
@@ -399,13 +398,10 @@ function MainContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
               <DashboardAdmin
                 mynncryptConfig={mynncryptConfig}
                 mynngiftConfig={mynngiftConfig}
+                publicClient={publicClient}
               />
             </div>
           }
-        />
-        <Route
-          path="/admin-debug"
-          element={<AdminDebugPage />}
         />
         <Route
           path="/how-it-works"
