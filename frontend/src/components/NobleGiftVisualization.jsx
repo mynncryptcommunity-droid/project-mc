@@ -627,7 +627,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     <div className="noblegift-visualization-container bg-gradient-to-b from-[#1A3A6A] to-[#102E50] p-4 sm:p-8 rounded-xl shadow-2xl min-h-0 flex flex-col items-center justify-center w-full">
       {/* Header dengan Gradient */}
       <div className="w-full text-center mb-8">
-        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F5C45E] via-[#E78B48] to-[#F5C45E] bg-clip-text text-transparent mb-2 drop-shadow-lg">🏆 Perjalanan MynnGift</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F5C45E] via-[#E78B48] to-[#F5C45E] bg-clip-text text-transparent mb-2 drop-shadow-lg">🏆 MynnGift Journey</h2>
         <div className="h-1 w-24 bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] rounded-full mx-auto"></div>
       </div>
 
@@ -700,7 +700,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         {/* Total Receivers */}
         {totalReceivers !== undefined && (
           <div className="mt-4 text-center p-3 bg-[#4DA8DA]/10 rounded-lg">
-            <p className="text-sm">Total Penerima: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
+            <p className="text-sm">Total Recipients: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
           </div>
         )}
       </div>

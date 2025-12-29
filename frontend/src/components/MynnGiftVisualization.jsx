@@ -633,7 +633,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     <div className="noblegift-visualization-container bg-gradient-to-b from-[#1A3A6A] to-[#102E50] p-4 sm:p-8 rounded-xl shadow-2xl min-h-0 flex flex-col items-center justify-center w-full">
       {/* Header dengan Gradient */}
       <div className="w-full text-center mb-8">
-        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F5C45E] via-[#E78B48] to-[#F5C45E] bg-clip-text text-transparent mb-2 drop-shadow-lg">🏆 Perjalanan MynnGift</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F5C45E] via-[#E78B48] to-[#F5C45E] bg-clip-text text-transparent mb-2 drop-shadow-lg">🏆 MynnGift Journey</h2>
         <div className="h-1 w-24 bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] rounded-full mx-auto"></div>
       </div>
 
@@ -642,15 +642,15 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         {/* Status Row */}
         <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
           <div className="text-center sm:text-left">
-            <p className="text-gray-400 text-sm mb-1">Status Anda</p>
-            <p className="text-lg font-semibold text-[#4DA8DA]">{nobleGiftStatus || 'Memuat...'}</p>
+            <p className="text-gray-400 text-sm mb-1">Your Status</p>
+            <p className="text-lg font-semibold text-[#4DA8DA]">{nobleGiftStatus || 'Loading...'}</p>
           </div>
           <div className="text-center">
-            <p className="text-gray-400 text-sm mb-1">Rank Anda</p>
-            <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank ? `${getNobleGiftRankName(Number(nobleGiftRank))} (Rank ${nobleGiftRank})` : 'Memuat...'}</p>
+            <p className="text-gray-400 text-sm mb-1">Your Rank</p>
+            <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank ? `${getNobleGiftRankName(Number(nobleGiftRank))} (Rank ${nobleGiftRank})` : 'Loading...'}</p>
           </div>
           <div className="text-center sm:text-right">
-            <p className="text-gray-400 text-sm mb-1">Antrian</p>
+            <p className="text-gray-400 text-sm mb-1">Queue</p>
             <p className="text-lg font-semibold text-[#FFD700]">{queuePosition && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'n/a'}</p>
           </div>
         </div>
@@ -697,7 +697,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
             <div className="mt-3 flex justify-between items-center text-xs">
               <span className="text-gray-400">Target: {MAX_GAS_SUBSIDY_POOL_TARGET} opBNB</span>
               <span className="text-[#00FF88] font-semibold">
-                {Math.min((Number(ethers.formatEther(gasSubsidyPool)) / MAX_GAS_SUBSIDY_POOL_TARGET) * 100, 100).toFixed(1)}% Selesai
+                {Math.min((Number(ethers.formatEther(gasSubsidyPool)) / MAX_GAS_SUBSIDY_POOL_TARGET) * 100, 100).toFixed(1)}% Complete
               </span>
             </div>
           </div>
@@ -706,7 +706,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         {/* Total Receivers */}
         {totalReceivers !== undefined && (
           <div className="mt-4 text-center p-3 bg-[#4DA8DA]/10 rounded-lg">
-            <p className="text-sm">Total Penerima: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
+            <p className="text-sm">Total Recipients: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
           </div>
         )}
       </div>

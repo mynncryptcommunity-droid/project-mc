@@ -630,7 +630,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress }) => {
     <div className="noblegift-visualization-container bg-gradient-to-b from-[#1A3A6A] to-[#102E50] p-4 sm:p-8 rounded-xl shadow-2xl min-h-0 flex flex-col items-center justify-center w-full">
       {/* Header dengan Gradient */}
       <div className="w-full text-center mb-8">
-        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F5C45E] via-[#E78B48] to-[#F5C45E] bg-clip-text text-transparent mb-2 drop-shadow-lg">🏆 Perjalanan MynnGift</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F5C45E] via-[#E78B48] to-[#F5C45E] bg-clip-text text-transparent mb-2 drop-shadow-lg">🏆 MynnGift Journey</h2>
         <div className="h-1 w-24 bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] rounded-full mx-auto"></div>
       </div>
 
@@ -740,7 +740,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress }) => {
         {/* Total Receivers */}
         {totalReceivers !== undefined && (
           <div className="mt-4 text-center p-3 bg-[#4DA8DA]/10 rounded-lg">
-            <p className="text-sm">Total Penerima: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
+            <p className="text-sm">Total Recipients: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
           </div>
         )}
       </div>
@@ -1098,16 +1098,16 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress }) => {
               {ranksData[4] && (
                 <>
                   <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA]">
-                    <p className="text-sm text-gray-400 mb-1">Total Dana Terkumpul</p>
-                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.totalFunds ? ethers.formatEther(ranksData[4].totalFunds) : 'Memuat...'} opBNB</p>
+                    <p className="text-sm text-gray-400 mb-1">Total Funds Collected</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.totalFunds ? ethers.formatEther(ranksData[4].totalFunds) : 'Loading...'} opBNB</p>
                   </div>
                   <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA]">
-                    <p className="text-sm text-gray-400 mb-1">Donatur Aktif</p>
+                    <p className="text-sm text-gray-400 mb-1">Active Donors</p>
                     <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.donors?.length || 0} / {maxDonorsPerRank}</p>
                   </div>
                   <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA]">
-                    <p className="text-sm text-gray-400 mb-1">Penerima Menunggu</p>
-                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.waitingQueue?.length || 0} orang</p>
+                    <p className="text-sm text-gray-400 mb-1">Waiting Recipients</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[4]?.waitingQueue?.length || 0} people</p>
                   </div>
                 </>
               )}
@@ -1129,16 +1129,16 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress }) => {
               {ranksData[8] && (
                 <>
                   <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#FFD700]">
-                    <p className="text-sm text-gray-400 mb-1">Total Dana Terkumpul</p>
-                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.totalFunds ? ethers.formatEther(ranksData[8].totalFunds) : 'Memuat...'} opBNB</p>
+                    <p className="text-sm text-gray-400 mb-1">Total Funds Collected</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.totalFunds ? ethers.formatEther(ranksData[8].totalFunds) : 'Loading...'} opBNB</p>
                   </div>
                   <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#FFD700]">
-                    <p className="text-sm text-gray-400 mb-1">Donatur Aktif</p>
+                    <p className="text-sm text-gray-400 mb-1">Active Donors</p>
                     <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.donors?.length || 0} / {maxDonorsPerRank}</p>
                   </div>
                   <div className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#FFD700]">
-                    <p className="text-sm text-gray-400 mb-1">Penerima Menunggu</p>
-                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.waitingQueue?.length || 0} orang</p>
+                    <p className="text-sm text-gray-400 mb-1">Waiting Recipients</p>
+                    <p className="text-lg font-semibold text-[#F5C45E]">{ranksData[8]?.waitingQueue?.length || 0} people</p>
                   </div>
                 </>
               )}

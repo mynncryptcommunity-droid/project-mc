@@ -680,7 +680,7 @@ const Level4Visualization = ({ mynngiftConfig, userAddress }) => {
         {/* Total Receivers */}
         {totalReceivers !== undefined && (
           <div className="mt-4 text-center p-3 bg-[#4DA8DA]/10 rounded-lg">
-            <p className="text-sm">Total Penerima: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
+            <p className="text-sm">Total Recipients: <span className="font-semibold text-[#4DA8DA]">{Number(totalReceivers)}</span></p>
           </div>
         )}
       </div>
