@@ -1147,22 +1147,22 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress }) => {
         </div>
       )}
 
-      {/* Area untuk Menampilkan Histori Event MynnGift Terakhir - Enhanced (Shared across all tabs) */}
+      {/* Recent MynnGift Activity History - Enhanced (Shared across all tabs) */}
       <div className="recent-events mt-8 w-full max-w-4xl bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">
-        <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">📊 Aktivitas MynnGift Terakhir</h3>
+        <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">📊 Recent MynnGift Activity</h3>
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {displayedActivities.length > 0 ? (
             displayedActivities.map((anim, index) => (
               <div key={index} className="p-3 bg-[#102E50]/50 rounded-lg border-l-4 border-[#4DA8DA] hover:bg-[#1A3A6A] transition-colors duration-200 text-sm text-gray-200">
-                {anim.type === 'DONATION' && `💛 Donor ${anim.donor ? anim.donor.slice(0,6) : '-'}...${anim.donor ? anim.donor.slice(-4) : ''} berdonasi ke Rank ${anim.rank} (${ethers.formatEther(anim.amount)} opBNB)`}
-                {anim.type === 'JOIN_QUEUE' && `🚶 User ${anim.user ? anim.user.slice(0,6) : '-'}...${anim.user ? anim.user.slice(-4) : ''} masuk antrean Rank ${anim.rank}`}
-                {anim.type === 'RECEIVE_FUNDS' && `✅ User ${anim.user ? anim.user.slice(0,6) : '-'}...${anim.user ? anim.user.slice(-4) : ''} menerima ${ethers.formatEther(anim.amount)} opBNB dari Rank ${anim.rank}`}
-                {anim.type === 'RANK_CYCLE_COMPLETE' && `🎯 Siklus Rank ${anim.rank} selesai.`}
-                {anim.type === 'USER_RANK_PROMOTE' && `🏆 User ${anim.user ? anim.user.slice(0,6) : '-'}... berhasil promosi ke Rank ${anim.toRank}.`}
+                {anim.type === 'DONATION' && `💛 Donor ${anim.donor ? anim.donor.slice(0,6) : '-'}...${anim.donor ? anim.donor.slice(-4) : ''} donated to Rank ${anim.rank} (${ethers.formatEther(anim.amount)} opBNB)`}
+                {anim.type === 'JOIN_QUEUE' && `🚶 User ${anim.user ? anim.user.slice(0,6) : '-'}...${anim.user ? anim.user.slice(-4) : ''} joined queue for Rank ${anim.rank}`}
+                {anim.type === 'RECEIVE_FUNDS' && `✅ User ${anim.user ? anim.user.slice(0,6) : '-'}...${anim.user ? anim.user.slice(-4) : ''} received ${ethers.formatEther(anim.amount)} opBNB from Rank ${anim.rank}`}
+                {anim.type === 'RANK_CYCLE_COMPLETE' && `🎯 Rank ${anim.rank} cycle completed.`}
+                {anim.type === 'USER_RANK_PROMOTE' && `🏆 User ${anim.user ? anim.user.slice(0,6) : '-'}... promoted to Rank ${anim.toRank}.`}
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-500 py-8">📭 Tidak ada aktivitas baru...</div>
+            <div className="text-center text-gray-500 py-8">📭 No recent activity...</div>
           )}
         </div>
       </div>
