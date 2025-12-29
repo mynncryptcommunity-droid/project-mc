@@ -244,62 +244,6 @@ const OverviewTab = ({
         <div className="h-1 w-24 bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] rounded-full mx-auto"></div>
       </div>
 
-      {/* DEBUG PANEL - Temporary */}
-      <div className="bg-red-900/30 border border-red-500 rounded-lg p-4 text-xs text-red-200">
-        <details className="cursor-pointer">
-          <summary className="font-bold text-red-300 mb-2">🔍 DEBUG INFO (Click to expand)</summary>
-          <div className="space-y-1 mt-2 font-mono text-xs">
-            <div>📍 Address: {userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : 'NOT CONNECTED'}</div>
-            
-            <div className="mt-3 border-t border-red-700 pt-2">
-              <strong className="text-red-300">🎯 USER LEVEL:</strong>
-              <div className="ml-4">
-                <div>Value: {userLevel ? Number(userLevel) : '❌ UNDEFINED'}</div>
-                <div>Loading: {levelLoading ? '⏳ YES' : '✓ NO'}</div>
-                <div>Error: {levelError ? `❌ ${levelError.message}` : '✓ none'}</div>
-              </div>
-            </div>
-
-            <div className="mt-3 border-t border-red-700 pt-2">
-              <strong className="text-red-300">📊 MYNNGIFT RANK:</strong>
-              <div className="ml-4">
-                <div>Value: {nobleGiftRank !== undefined ? Number(nobleGiftRank) : '❌ UNDEFINED'}</div>
-                <div>Loading: {rankLoading ? '⏳ YES' : '✓ NO'}</div>
-                <div>Error: {rankError ? `❌ ${rankError.message}` : '✓ none'}</div>
-              </div>
-            </div>
-
-            <div className="mt-3 border-t border-red-700 pt-2">
-              <strong className="text-red-300">💰 INCOME:</strong>
-              <div className="ml-4">
-                <div>Value: {userTotalIncome !== undefined ? ethers.formatEther(userTotalIncome) : '❌ UNDEFINED'} opBNB</div>
-                <div>Loading: {incomeLoading ? '⏳ YES' : '✓ NO'}</div>
-                <div>Error: {incomeError ? `❌ ${incomeError.message}` : '✓ none'}</div>
-              </div>
-            </div>
-
-            <div className="mt-3 border-t border-red-700 pt-2">
-              <strong className="text-red-300">💸 DONATION:</strong>
-              <div className="ml-4">
-                <div>Value: {userTotalDonation !== undefined ? ethers.formatEther(userTotalDonation) : '❌ UNDEFINED'} opBNB</div>
-                <div>Loading: {donationLoading ? '⏳ YES' : '✓ NO'}</div>
-                <div>Error: {donationError ? `❌ ${donationError.message}` : '✓ none'}</div>
-              </div>
-            </div>
-
-            <div className="mt-3 border-t border-red-700 pt-2">
-              <strong className="text-red-300">🎪 STREAM STATUS:</strong>
-              <div className="ml-4">
-                <div>isReceiver_StreamA: {isReceiverData ? '✓ YES' : '❌ NO'}</div>
-                <div>isDonor_StreamA: {isDonorData ? '✓ YES' : '❌ NO'}</div>
-                <div>Eligible A (L4+): {isEligibleForStreamA ? '✓ YES' : '❌ NO'}</div>
-                <div>Eligible B (L8+): {isEligibleForStreamB ? '✓ YES' : '❌ NO'}</div>
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
-
       {/* Eligibility Info */}
       <div className="bg-[#102E50]/50 p-4 rounded-lg border border-[#4DA8DA]/30 text-sm text-gray-300">
         <p className="mb-2">
@@ -492,7 +436,7 @@ const IncomeHistoryTab = ({ userAddress, mynngiftConfig, mynncryptConfig }) => {
           console.log(`📌 Rank ${rank}, Amount: ${ethers.formatEther(amount)} opBNB -> Stream ${streamType}`);
           
           return {
-            date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }),
+            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
             type: 'DONATE',
             rank: rank,
             amount: ethers.formatEther(amount),
@@ -539,7 +483,7 @@ const IncomeHistoryTab = ({ userAddress, mynngiftConfig, mynncryptConfig }) => {
         }
         
         return {
-          date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }),
+          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
           type: 'DONATE',
           rank: Number(log.args.rank),
           amount: ethers.formatEther(log.args.amount),
@@ -588,8 +532,8 @@ const IncomeHistoryTab = ({ userAddress, mynngiftConfig, mynncryptConfig }) => {
         </div>
       ) : (
         <div className="text-center py-12 text-gray-400">
-          <p>📋 Menunggu data transaksi...</p>
-          <p className="text-xs mt-2">Transaksi akan muncul ketika ada donasi di stream Anda</p>
+          <p>📋 No transaction history yet</p>
+          <p className="text-xs mt-2">Transactions will appear when you make donations in your stream</p>
         </div>
       )}
     </div>
