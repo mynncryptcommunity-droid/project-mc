@@ -7,19 +7,19 @@ import { toast } from 'react-toastify';
  * 
  * PURPOSE:
  * - Detect jika user connect ke wrong blockchain network
- * - Show warning toast jika tidak support
- * - Optional: Auto-switch ke correct network
+ * - Show warning toast jika tidak support (less aggressive)
+ * - Avoid constant reconnection prompts
  * 
  * SUPPORTED NETWORKS:
  * - 1337: Hardhat Local (development)
- * - 5611: opBNB Testnet (testing)
+ * - 5611: opBNB Testnet (PRIMARY - production)
  * - 204: opBNB Mainnet (production)
  * 
  * BEHAVIOR:
- * 1. Jika user connect ke supported network → no action (silent)
- * 2. Jika user connect ke unsupported network → show warning toast
+ * 1. Jika user connect ke testnet (5611) → no warning (silent)
+ * 2. Jika user connect ke unsupported network → show warning (one-time only)
  * 3. Jika user switch network → detect and show warning
- * 4. Development mode: prefer Hardhat, warn for testnet
+ * 4. Do NOT constantly nag user to switch networks
  */
 
 export function NetworkDetector() {
@@ -31,6 +31,7 @@ export function NetworkDetector() {
   
   // Track warning status untuk avoid duplicate toasts
   const [lastWarningChainId, setLastWarningChainId] = useState(null);
+  const [shownWarnings, setShownWarnings] = useState(new Set());
 
   // Define supported networks
   const SUPPORTED_CHAINS = {
@@ -42,6 +43,7 @@ export function NetworkDetector() {
     5611: { 
       name: 'opBNB Testnet', 
       isLocal: false,
+      isPrimary: true,
       description: 'Testnet untuk testing'
     },
     204: { 
@@ -51,7 +53,7 @@ export function NetworkDetector() {
     },
   };
 
-  // Default target network (prefer testnet untuk fallback)
+  // Target network (PREFER TESTNET - less aggressive)
   const TARGET_CHAIN_ID = 5611;
   const TARGET_CHAIN_NAME = 'opBNB Testnet';
 
@@ -63,14 +65,14 @@ export function NetworkDetector() {
     }
 
     // Check jika network adalah supported network
-    const isSupported = SUPPORTED_CHAINS[chain.id];
+    const chainInfo = SUPPORTED_CHAINS[chain.id];
 
-    if (!isSupported) {
+    if (!chainInfo) {
       // ❌ WRONG NETWORK - bukan supported network
       
-      // Avoid duplicate warnings - hanya show jika beda dari last warning
-      if (lastWarningChainId !== chain.id) {
-        const warningMessage = `❌ Wrong Network: "${chain.name}" is not supported. Please switch to ${TARGET_CHAIN_NAME}.`;
+      // Avoid duplicate warnings - hanya show ONE TIME per wrong network
+      if (!shownWarnings.has(chain.id)) {
+        const warningMessage = `⚠️ Unsupported Network: "${chain.name}" is not supported. Please switch to ${TARGET_CHAIN_NAME} (Chain ID: ${TARGET_CHAIN_ID}).`;
         
         console.warn('NetworkDetector:', warningMessage, {
           currentChainId: chain.id,
@@ -79,43 +81,40 @@ export function NetworkDetector() {
           targetChainId: TARGET_CHAIN_ID,
         });
 
-        // Show warning toast (stay for 10 seconds)
+        // Show warning toast (stay for 15 seconds)
         toast.warning(warningMessage, {
-          autoClose: 10000,
+          autoClose: 15000,
           position: 'top-center',
           style: {
-            background: '#dc2626', // Red
+            background: '#dc2626',
             color: 'white',
           },
         });
 
-        // Track this warning untuk avoid duplicates
+        // Mark this warning as shown
+        setShownWarnings(prev => new Set(prev).add(chain.id));
         setLastWarningChainId(chain.id);
 
-        // AUTO-SWITCH (optional - hanya di production)
-        // Comment out jika tidak mau auto-switch
-        if (process.env.NODE_ENV === 'production' && switchNetwork) {
-          console.log('NetworkDetector: Attempting auto-switch to', TARGET_CHAIN_ID);
-          // Uncomment untuk enable auto-switch:
-          // switchNetwork(TARGET_CHAIN_ID);
-        }
+        // AUTO-SWITCH (optional - disabled to avoid reconnection spam)
+        // if (switchNetwork) {
+        //   switchNetwork(TARGET_CHAIN_ID);
+        // }
       }
     } else {
-      // ✅ CORRECT NETWORK
+      // ✅ CORRECT NETWORK - Supported!
       
-      // Jika sebelumnya ada warning, clear it
+      // Clear warnings when back to supported network
       if (lastWarningChainId !== null) {
-        console.log('NetworkDetector: Back to correct network', chain.name);
+        console.log('✅ Connected to supported network:', chain.name);
         setLastWarningChainId(null);
       }
 
-      // Optional: Show info message untuk development
+      // Info only for development (no warnings for testnet or mainnet)
       if (process.env.NODE_ENV === 'development' && chain.id !== 1337) {
-        // Hanya info, tidak critical
-        console.info(`NetworkDetector: Connected to ${chain.name}. Recommend Hardhat Local (1337) for development.`);
+        console.info(`ℹ️ Connected to ${chain.name}. Recommend Hardhat Local (1337) for development.`);
       }
     }
-  }, [chain, isConnected, lastWarningChainId, switchNetwork]);
+  }, [chain, isConnected, lastWarningChainId, shownWarnings, switchNetwork]);
 
   // Silent component - tidak render UI apapun
   // Semua logic handle via console.warn dan toast notifications

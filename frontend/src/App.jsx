@@ -71,12 +71,12 @@ const opbnbTestnet = {
 };
 
 const mynncryptConfig = {
-  address: import.meta.env.VITE_MYNNCRYPT_ADDRESS || '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+  address: import.meta.env.VITE_MYNNCRYPT_ADDRESS || '0x1923bD63B2A468d48eA70f5690239dd9B0eb24cE',
   abi: mynncryptAbi,
 };
 
 const mynngiftConfig = {
-  address: import.meta.env.VITE_MYNNGIFT_ADDRESS || '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+  address: import.meta.env.VITE_MYNNGIFT_ADDRESS || '0x82682F273a26Bbf5c6bD3BC267fc14c3E4D231f6',
   abi: mynngiftAbi,
 };
 
@@ -93,10 +93,10 @@ const config = createConfig({
   },
 });
 
-// Buat publicClient berdasarkan config
+// Buat publicClient berdasarkan config (using testnet)
 const publicClient = createPublicClient({
-  chain: opbnbMainnet,
-  transport: http('https://opbnb-mainnet-rpc.bnbchain.org'),
+  chain: opbnbTestnet,
+  transport: http('https://opbnb-testnet-rpc.bnbchain.org'),
 });
 
 const queryClient = new QueryClient();
