@@ -1079,14 +1079,26 @@ useEffect(() => {
           console.log('Processing income entry:', income);
           if (!income) return null;
           
+          const layer = Number(income.layer ?? income.level ?? income.userLevel ?? 0);
+          const senderId = income.id?.toString() || '';
+          const receiverId = income.receiverId?.toString() || income.to?.toString() || userId?.toString() || '';
+          
+          // FILTER: Exclude MynnGift donations
+          // MynnGift donations are recorded with layer = user's upgrade level (2-9)
+          // and senderId === receiverId (self-referential)
+          if (layer >= 2 && layer <= 9 && senderId === receiverId) {
+            console.log('Filtering out MynnGift donation entry:', income);
+            return null; // Skip MynnGift entries from income history
+          }
+          
           // Determine income type based on layer
-          const incomeType = ((layer) => {
-              if (layer === 0) return IncomeType.REFERRAL;
-              if (layer === 1) return IncomeType.SPONSOR;
-              if (layer >= 10) return IncomeType.UPLINE;
+          const incomeType = ((lyr) => {
+              if (lyr === 0) return IncomeType.REFERRAL;
+              if (lyr === 1) return IncomeType.SPONSOR;
+              if (lyr >= 10) return IncomeType.UPLINE;
               // Fallback for types not explicitly mapped, or royalty which may not have a layer in this context
               return IncomeType.REFERRAL; 
-          })(Number(income.layer ?? income.level ?? income.userLevel ?? 0));
+          })(layer);
 
           const senderIdFromContract = income.id?.toString() || '';
           // Ambil receiverId dari data income, jangan selalu userId dashboard
@@ -2160,13 +2172,14 @@ useEffect(() => {
     };
   }, [mynncryptConfig, userId, refetchUserInfo]);
 
-  // Filter income history
+  // Filter income history - Exclude MynnGift (NOBLEGIFT) as it's spending, not income
   const allowedIncomeTypes = useMemo(() => [
     IncomeType.REFERRAL,
     IncomeType.UPLINE,
     IncomeType.SPONSOR,
-    IncomeType.ROYALTY,
-    IncomeType.NOBLEGIFT
+    IncomeType.ROYALTY
+    // NOTE: IncomeType.NOBLEGIFT (6) is excluded because MynnGift donations are spending/expenses,
+    // not actual income. They are being filtered out in the income processing step above.
   ], []);
 
   const filteredIncomeHistory = useMemo(() => {
