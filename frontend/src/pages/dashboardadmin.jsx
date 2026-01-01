@@ -776,32 +776,18 @@ const FinanceSection = ({ mynncryptConfig, mynngiftConfig, opbnbPriceUSD, opbnbP
   };
 
   // Write functions for MynnGift
-  const { writeContract: writeMynnGiftWithdrawShareFee, data: hashMynnGiftWithdrawShareFee, isPending: isPendingMynnGiftWithdrawShareFee, isSuccess: isSuccessMynnGiftWithdrawShareFee, isError: isErrorMynnGiftWithdrawShareFee, error: errorMynnGiftWithdrawShareFee } = useWriteContract();
-  const { isLoading: isConfirmingMynnGiftWithdrawShareFee } = useWaitForTransactionReceipt({
-    hash: hashMynnGiftWithdrawShareFee,
+  // Write functions for MynnGift - Withdraw Promotion Pool
+  const { writeContract: writeMynnGiftWithdrawPromotionPool, data: hashMynnGiftWithdrawPromotionPool, isPending: isPendingMynnGiftWithdrawPromotionPool, isSuccess: isSuccessMynnGiftWithdrawPromotionPool, isError: isErrorMynnGiftWithdrawPromotionPool, error: errorMynnGiftWithdrawPromotionPool } = useWriteContract();
+  const { isLoading: isConfirmingMynnGiftWithdrawPromotionPool } = useWaitForTransactionReceipt({
+    hash: hashMynnGiftWithdrawPromotionPool,
   });
 
-  const handleMynnGiftWithdrawShareFee = () => {
+  const handleMynnGiftWithdrawPromotionPool = () => {
     if (withdrawAmount) {
-      writeMynnGiftWithdrawShareFee({
+      writeMynnGiftWithdrawPromotionPool({
         ...mynngiftConfig,
-        functionName: 'withdrawExcessShareFeeBalance',
+        functionName: 'withdrawExcessPromotionPool',
         args: [parseEther(withdrawAmount)],
-      });
-    }
-  };
-
-  const { writeContract: writeMynnGiftTopUpShareFee, data: hashMynnGiftTopUpShareFee, isPending: isPendingMynnGiftTopUpShareFee, isSuccess: isSuccessMynnGiftTopUpShareFee, isError: isErrorMynnGiftTopUpShareFee, error: errorMynnGiftTopUpShareFee } = useWriteContract();
-  const { isLoading: isConfirmingMynnGiftTopUpShareFee } = useWaitForTransactionReceipt({
-    hash: hashMynnGiftTopUpShareFee,
-  });
-
-  const handleMynnGiftTopUpShareFee = () => {
-    if (topUpAmount) {
-      writeMynnGiftTopUpShareFee({
-        ...mynngiftConfig,
-        functionName: 'topUpShareFeeBalance',
-        value: parseEther(topUpAmount),
       });
     }
   };
@@ -882,7 +868,7 @@ const FinanceSection = ({ mynncryptConfig, mynngiftConfig, opbnbPriceUSD, opbnbP
             </div>
           </div>
           <div className={cardClass}>
-            <h3 className="luxury-title mb-4 text-[#F5C45E]">Tarik Kelebihan Saldo Share Fee (MynnGift)</h3>
+            <h3 className="luxury-title mb-4 text-[#F5C45E]">Tarik Kelebihan Saldo Promotion Pool (MynnGift)</h3>
             <div className="flex flex-col space-y-4">
               <input
                 type="number"
@@ -893,34 +879,13 @@ const FinanceSection = ({ mynncryptConfig, mynngiftConfig, opbnbPriceUSD, opbnbP
               />
               <button
                 className={buttonClass}
-                onClick={handleMynnGiftWithdrawShareFee}
-                disabled={isPendingMynnGiftWithdrawShareFee || !withdrawAmount || isNaN(parseFloat(withdrawAmount)) || parseFloat(withdrawAmount) <= 0}
+                onClick={handleMynnGiftWithdrawPromotionPool}
+                disabled={isPendingMynnGiftWithdrawPromotionPool || !withdrawAmount || isNaN(parseFloat(withdrawAmount)) || parseFloat(withdrawAmount) <= 0}
               >
-                {isPendingMynnGiftWithdrawShareFee ? 'Menunggu Persetujuan...' : isConfirmingMynnGiftWithdrawShareFee ? 'Menunggu Konfirmasi...' : 'Tarik Share Fee'}
+                {isPendingMynnGiftWithdrawPromotionPool ? 'Menunggu Persetujuan...' : isConfirmingMynnGiftWithdrawPromotionPool ? 'Menunggu Konfirmasi...' : 'Tarik Promotion Pool'}
               </button>
-              {isSuccessMynnGiftWithdrawShareFee && <p className="text-green-500">Penarikan Share Fee berhasil! Hash: {hashMynnGiftWithdrawShareFee}</p>}
-              {isErrorMynnGiftWithdrawShareFee && <p className="text-red-500">Error penarikan Share Fee: {errorMynnGiftWithdrawShareFee?.message}</p>}
-            </div>
-          </div>
-          <div className={cardClass}>
-            <h3 className="luxury-title mb-4 text-[#F5C45E]">Isi Saldo Share Fee (MynnGift)</h3>
-            <div className="flex flex-col space-y-4">
-              <input
-                type="number"
-                placeholder="Jumlah opBNB"
-                className="p-2 rounded-md bg-[#011220] border border-[#243DB6]/60 focus:outline-none focus:ring-2 focus:ring-[#F5C45E] text-[#F5C45E]"
-                value={topUpAmount}
-                onChange={(e) => setTopUpAmount(e.target.value)}
-              />
-              <button
-                className={buttonClass}
-                onClick={handleMynnGiftTopUpShareFee}
-                disabled={isPendingMynnGiftTopUpShareFee || !topUpAmount || isNaN(parseFloat(topUpAmount)) || parseFloat(topUpAmount) <= 0}
-              >
-                {isPendingMynnGiftTopUpShareFee ? 'Menunggu Persetujuan...' : isConfirmingMynnGiftTopUpShareFee ? 'Menunggu Konfirmasi...' : 'Isi Saldo Share Fee'}
-              </button>
-              {isSuccessMynnGiftTopUpShareFee && <p className="text-green-500">Pengisian Saldo Share Fee berhasil! Hash: {hashMynnGiftTopUpShareFee}</p>}
-              {isErrorMynnGiftTopUpShareFee && <p className="text-red-500">Error pengisian Saldo Share Fee: {errorMynnGiftTopUpShareFee?.message}</p>}
+              {isSuccessMynnGiftWithdrawPromotionPool && <p className="text-green-500">Penarikan Promotion Pool berhasil! Hash: {hashMynnGiftWithdrawPromotionPool}</p>}
+              {isErrorMynnGiftWithdrawPromotionPool && <p className="text-red-500">Error penarikan Promotion Pool: {errorMynnGiftWithdrawPromotionPool?.message}</p>}
             </div>
           </div>
           <div className={cardClass}>
