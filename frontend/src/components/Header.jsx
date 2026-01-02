@@ -754,11 +754,24 @@ export default function Header({ mynncryptConfig }) {
               border-radius: 12px;
               padding: 30px 40px;
               position: relative;
+              max-width: 90vw;
+            }
+            @media (max-width: 480px) {
+              .modal-wrapper {
+                width: 100%;
+                padding: 20px 25px;
+              }
             }
             .modal-title {
               font-size: 36px;
               text-align: center;
               margin-bottom: 30px;
+            }
+            @media (max-width: 480px) {
+              .modal-title {
+                font-size: 24px;
+                margin-bottom: 20px;
+              }
             }
             .modal-wrapper .btn {
               width: 100%;
@@ -853,6 +866,13 @@ export default function Header({ mynncryptConfig }) {
               padding: 30px 40px;
               position: relative;
               text-align: center;
+              max-width: 90vw;
+            }
+            @media (max-width: 480px) {
+              .register-modal-wrapper {
+                width: 100%;
+                padding: 20px 25px;
+              }
             }
             .register-modal-wrapper h3 {
               font-size: 24px;
@@ -926,6 +946,8 @@ export default function Header({ mynncryptConfig }) {
                 border-top: 1px solid rgba(221,168,83,0.2);
                 padding-bottom: 20px;
                 align-items: center;
+                z-index: 1000;
+                pointer-events: auto;
               }
               .gooey-nav-items {
                 flex-direction: column;

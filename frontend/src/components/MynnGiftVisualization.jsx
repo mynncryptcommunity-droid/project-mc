@@ -615,6 +615,18 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     return nobleGiftRankNames[rank] || 'N/A';
   }, []);
 
+  // Fungsi untuk translate status dari bahasa Indonesia ke Inggris
+  const formatStatusDisplay = useCallback((status) => {
+    if (!status) return 'Loading...';
+    const statusMap = {
+      'tidak aktif': 'Not Active',
+      'Tidak Aktif': 'Not Active',
+      'aktif': 'Active',
+      'Aktif': 'Active',
+    };
+    return statusMap[status] || status; // Return original if not found in map
+  }, []);
+
   // Fungsi untuk mendapatkan gambar berdasarkan rank
   const getPromotionImage = (rank) => {
     switch (rank) {
@@ -643,7 +655,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
           <div className="text-center sm:text-left">
             <p className="text-gray-400 text-sm mb-1">Your Status</p>
-            <p className="text-lg font-semibold text-[#4DA8DA]">{nobleGiftStatus || 'Loading...'}</p>
+            <p className="text-lg font-semibold text-[#4DA8DA]">{formatStatusDisplay(nobleGiftStatus)}</p>
           </div>
           <div className="text-center">
             <p className="text-gray-400 text-sm mb-1">Your Rank</p>
