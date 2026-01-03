@@ -570,6 +570,20 @@ const handleContractError = (error, context) => {
 };
 
 function Dashboard({ mynncryptConfig, mynngiftConfig, platformWalletConfig }) {
+  // Format MynnGift status from contract (translate to English)
+  const formatMynnGiftStatus = (status) => {
+    if (!status) return 'Loading...';
+    const statusMap = {
+      'tidak aktif': 'Not Active',
+      'Tidak Aktif': 'Not Active',
+      'belum aktif': 'Not Active',
+      'Belum Aktif': 'Not Active',
+      'aktif': 'Active',
+      'Aktif': 'Active',
+    };
+    return statusMap[status] || status; // Return original if not found in map
+  };
+
   const { address, isConnected } = useAccount();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768); // Set default to open for desktop, closed for mobile
@@ -2602,7 +2616,7 @@ useEffect(() => {
                           </a>
                         </li>
                         <li>
-                          <a href={`https://wa.me/?text=Join%20Smart%20Mynncrypt%20Community%20using%20my%20referral%20link:%20http://localhost:5173/register?ref=${userId}`} target="_blank" rel="noopener noreferrer">
+                          <a href={`https://wa.me/?text=Join%20Smart%20Mynncrypt%20Community%20using%20my%20referral%20link:%20https://project-mc-tan.vercel.app/register?ref=${userId}`} target="_blank" rel="noopener noreferrer">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M17.6 6.31999C16.8669 5.58141 15.9943 4.99596 15.033 4.59767C14.0716 4.19938 13.0406 3.99622 12 3.99999C10.6089 4.00135 9.24248 4.36819 8.03771 5.06377C6.83294 5.75935 5.83208 6.75926 5.13534 7.96335C4.4386 9.16745 4.07046 10.5335 4.06776 11.9246C4.06507  13.3158 4.42793 14.6832 5.12 15.89L4 20L8.2 18.9C9.35975 19.5452 10.6629 19.8891 11.99 19.9C14.0997 19.9001 16.124 19.0668 17.6222 17.5816C19.1205 16.0965 19.9715 14.0796 19.99 11.97C19.983 10.9173 19.7682 9.87634 19.3581 8.9068C18.948 7.93725 18.3505 7.05819 17.6 6.31999ZM12 18.53C10.8177 18.5308 9.65701 18.2242 8.64 17.64L8.4 17.48L5.91 18.12L6.57 15.69L6.39 15.44C5.75186 14.3662 5.41702 13.1302 5.41702 11.87C5.41702 10.6098 5.75186 9.37377 6.39 8.29999C7.37359 6.66339 9.01574 5.58769 10.8679 5.33642C12.72 5.08515 14.5895 5.68458 16.0137 6.99449C17.4379 8.30439 18.2834 10.1995 18.34 12.19C18.3327 13.9182 17.6359 15.5725 16.3812 16.8186C15.1265 18.0648 13.4681 18.7501 11.74 18.75L12 18.53ZM15.41 13.22C15.2813 13.1461 15.1432 13.0925 15 13.06C14.8567 13.0276 14.7093 13.0116 14.561 13.0125C14.4126 13.0134 14.2654 13.0312 14.1225 13.0654C13.9796 13.0997 13.8427 13.15 13.716 13.2147C13.5893 13.2795 13.4743 13.3579 13.3749 13.4473C13.2755 13.5368 13.1929 13.6362 13.1301 13.7422C13.0673 13.8482 13.0251 13.9595 13.0048 14.0741C12.9846 14.1886 12.9865 14.3048 13.01 14.42C13.0094 14.4924 13.0192 14.5645 13.0391 14.6338C13.059 14.703 13.0887 14.7686 13.1272 14.8282C13.1657 14.8879 13.2124 14.9409 13.2655 14.9852C13.3186 15.0296 13.3775 15.0647 13.44 15.09C13.6 15.16 13.89 15.26 14.37 15.45C14.8309 15.6264 15.2785 15.8437 15.71 16.1C16.0992 16.3194 16.4584 16.5871 16.78 16.897C17.0256 17.1389 17.2025 17.4358 17.2957 17.7601C17.3889 18.0843 17.3956 18.4262 17.3152 18.7537C17.2348 19.0812 17.0697 19.3838 16.834 19.6346C16.5983 19.8854 16.2989 20.0771 15.9625 20.1933C15.6261 20.3095 15.2633 20.3468 14.91 20.3017C14.5567 20.2567 14.2232 20.1307 13.94 19.936C13.6159 19.7136 13.3358 19.4311 13.1158 19.1035C12.8958 18.7759 12.7399 18.4093 12.66 18.0239C12.5801 17.6385 12.5778 17.2417 12.6532 16.8553C12.7286 16.4689 12.8803 16.1003 13.0966 15.7699C13.313 15.4396 13.5901 15.1534 13.9118 14.9267C14.2336 14.7001 14.5941 14.5374 14.9751 14.4478C15.3561 14.3582 15.7504 14.3434 16.1371 14.4043C16.5237 14.4652 16.8952 14.6007 17.23 14.8039C17.5648 15.0072 17.8573 15.2742 18.09 15.59C18.1753 15.7139 18.2191 15.8592 18.2161 16.0071C18.2131 16.155 18.1635 16.2984 18.0736 16.4184C17.9837 16.5384 17.8576 16.6296 17.7125 16.6804C17.5674 16.7312 17.4099 16.7393 17.26 16.704L15.41 13.22Z" fill="currentColor"/>
                             </svg>
@@ -2711,7 +2725,7 @@ useEffect(() => {
                   <div className="flex justify-between items-center">
                     <span>Status:</span>
                     <span className={`font-semibold ${nobleGiftStatus && nobleGiftStatus !== 'Not Active' ? 'text-green-400' : 'text-gray-400'}`}>
-                      {nobleGiftStatus || 'Loading...'}
+                      {formatMynnGiftStatus(nobleGiftStatus)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -3160,7 +3174,7 @@ useEffect(() => {
               </h3>
               <input
                 type="text"
-                value={`http://localhost:5173/register?ref=${userId}`}
+                value={`https://project-mc-tan.vercel.app/register?ref=${userId}`}
                 readOnly
                 style={{
                   width: '100%',
