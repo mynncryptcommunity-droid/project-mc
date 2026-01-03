@@ -977,13 +977,19 @@ export default function Header({ mynncryptConfig }) {
               background: none;
               border: none;
               cursor: pointer;
-              padding: 10px;
+              padding: 8px;
               position: relative;
-              z-index: 60;
+              z-index: 1001;
+              min-width: 50px;
+              min-height: 50px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
             }
             @media (max-width: 768px) {
               .hamburger-menu {
-                display: block;
+                display: flex;
               }
             }
             .hamburger-icon {

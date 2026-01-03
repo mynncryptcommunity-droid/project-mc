@@ -128,6 +128,17 @@ const sidebarStyles = `
     color: #4DA8DA;
     padding: 8px;
     border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    z-index: 1001;
+    position: relative;
+    flex-shrink: 0;
+    width: auto;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .hamburger-btn:hover {
@@ -155,6 +166,14 @@ const sidebarStyles = `
 
   .hamburger-btn.open .icon-bar:nth-child(3) {
     transform: rotate(45deg) translate(-5px, -6px);
+  }
+
+  @media (max-width: 768px) {
+    .hamburger-btn {
+      min-width: 50px;
+      min-height: 50px;
+      margin-right: 8px;
+    }
   }
 
   .overlay {
