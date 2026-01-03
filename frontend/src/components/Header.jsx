@@ -924,80 +924,114 @@ export default function Header({ mynncryptConfig }) {
               .header-container {
                 width: 100vw;
                 box-sizing: border-box;
-                flex-direction: column;
-                align-items: stretch;
-                padding: 12px 8px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 12px;
+                height: auto;
+              }
+              .logo-title-container {
+                flex: 1;
+                min-width: 0;
+              }
+              .header-title {
+                font-size: 0.9rem;
+                padding: 3px 10px;
+              }
+              .logo-img {
+                width: 40px;
+                height: 40px;
               }
               .header-row {
-                flex-direction: column;
-                gap: 16px;
+                display: flex;
+                flex-direction: row;
+                gap: 0;
                 width: 100%;
-                align-items: stretch;
+                align-items: center;
+                justify-content: space-between;
+                position: relative;
               }
               .gooey-nav {
                 display: ${isNavOpen ? 'flex' : 'none'};
                 flex-direction: column;
-                position: absolute;
-                top: 80px;
+                position: fixed;
+                top: 60px;
+                left: 0;
                 right: 0;
-                background: rgba(24,59,78,0.9);
+                background: rgba(24,59,78,0.95);
                 width: 100%;
-                box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+                max-height: calc(100vh - 60px);
+                overflow-y: auto;
+                box-shadow: 0 4px 30px rgba(0,0,0,0.2);
                 border-top: 1px solid rgba(221,168,83,0.2);
-                padding-bottom: 20px;
+                padding: 20px 0 20px 0;
                 align-items: center;
-                z-index: 1000;
+                z-index: 999;
                 pointer-events: auto;
               }
               .gooey-nav-items {
                 flex-direction: column;
-                width: 80%;
-                margin-top: 20px;
+                width: 90%;
+                max-width: 400px;
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                border: none;
+                gap: 15px;
+                box-shadow: none;
               }
               .gooey-nav-item {
                 width: 100%;
                 text-align: center;
+                padding: 12px 20px !important;
+                font-size: 1rem !important;
               }
               .join-now-button {
                 display: flex;
-                width: 100%;
-                max-width: 100vw;
+                width: 90%;
+                max-width: 400px;
                 box-sizing: border-box;
                 justify-content: center;
                 align-items: center;
-                margin: 16px 0 0 0;
+                margin: 15px auto 0;
                 font-size: 1.1rem;
                 padding: 14px 0;
                 border-radius: 16px;
                 box-shadow: none;
+                height: 50px;
               }
             }
             .hamburger-menu {
-              display: none;
               background: none;
               border: none;
               cursor: pointer;
-              padding: 8px;
+              padding: 8px 12px;
               position: relative;
-              z-index: 1001;
+              z-index: 1002;
               min-width: 50px;
               min-height: 50px;
-              display: flex;
+              display: none;
               align-items: center;
               justify-content: center;
               flex-shrink: 0;
+              top: 0;
+              right: 0;
             }
             @media (max-width: 768px) {
               .hamburger-menu {
                 display: flex;
+                padding: 6px 8px;
+                min-width: 44px;
+                min-height: 44px;
               }
             }
             .hamburger-icon {
-              width: 25px;
-              height: 3px;
+              width: 24px;
+              height: 2.5px;
               background-color: #F3F3E0;
               margin: 5px 0;
               transition: 0.4s;
+              display: block;
             }
             .hamburger-menu.open .hamburger-icon:nth-child(1) {
               transform: rotate(-45deg) translate(-5px, 6px);
@@ -1007,6 +1041,52 @@ export default function Header({ mynncryptConfig }) {
             }
             .hamburger-menu.open .hamburger-icon:nth-child(3) {
               transform: rotate(45deg) translate(-5px, -6px);
+            }
+            /* Extra small screens (450px dan lebih kecil) */
+            @media (max-width: 480px) {
+              .header-container {
+                padding: 6px 8px;
+                height: auto;
+              }
+              .logo-img {
+                width: 35px;
+                height: 35px;
+              }
+              .header-title {
+                font-size: 0.8rem;
+                padding: 2px 8px;
+                border-radius: 6px;
+              }
+              .hamburger-menu {
+                padding: 6px;
+                min-width: 44px;
+                min-height: 44px;
+                margin-right: -6px;
+                touch-action: manipulation;
+              }
+              .hamburger-icon {
+                width: 22px;
+                height: 2px;
+                margin: 4px 0;
+              }
+              .gooey-nav {
+                top: 50px !important;
+                padding: 15px 0 20px 0;
+              }
+              .gooey-nav-items {
+                width: 95%;
+                gap: 12px;
+              }
+              .gooey-nav-item {
+                padding: 10px 15px !important;
+                font-size: 0.9rem !important;
+              }
+              .join-now-button {
+                width: 95%;
+                max-width: none;
+                height: 45px;
+                font-size: 1rem;
+              }
             }
           `}
         </style>
