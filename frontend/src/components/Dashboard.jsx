@@ -48,6 +48,12 @@ const IncomeTypeDisplay = {
   6: 'MynnGift'
 };
 
+// ✅ OPTIMIZATION: Create memoized versions of heavy sub-components
+const MemoizedTeamMatrix = React.memo(TeamMatrix);
+const MemoizedTeamTree = React.memo(TeamTree);
+const MemoizedNobleGiftVisualization = React.memo(NobleGiftVisualization);
+const MemoizedMynnGiftTabs = React.memo(MynnGiftTabs);
+
 // Define explicit upgrade costs for each level
 // These are the *individual* costs to upgrade to that level, not cumulative.
 // Level 1 (registration) is assumed to be 0.0044 ETH, but we start upgrades from Level 2.
@@ -1356,7 +1362,7 @@ useEffect(() => {
     }
   };
 
-  const handleClaimRoyalty = async () => {
+  const handleClaimRoyalty = useCallback(async () => {
     try {
       await claimRoyalty({
         ...mynncryptConfig,
@@ -1368,7 +1374,7 @@ useEffect(() => {
     } catch (error) {
       toast.error('Claim failed: ' + error.message);
     }
-  };
+  }, [claimRoyalty, mynncryptConfig, refetchUserInfo, refetchUserId]);
 
   // Process income event function
   const processIncomeEvent = useCallback((event, type, currentUserId) => { // Added currentUserId as explicit param
@@ -1721,7 +1727,7 @@ useEffect(() => {
   }, [mynncryptConfig?.abi, mynncryptConfig?.address, userId, processIncomeEvent, refetchUserInfo, refetchUserId, validateAndNormalizeEvent]);
 
   // eslint-disable-next-line no-unused-vars
-  const handleAutoUpgrade = async () => {
+  const handleAutoUpgrade = useCallback(async () => {
     try {
       await autoUpgrade({
         ...mynncryptConfig,
@@ -1734,13 +1740,13 @@ useEffect(() => {
     } catch (error) {
       toast.error('Auto-upgrade failed: ' + error.message);
     }
-  };
+  }, [userId, autoUpgrade, mynncryptConfig, refetchUserInfo, refetchUserId]);
 
-  const handleShareReferral = () => {
+  const handleShareReferral = useCallback(() => {
     setShowShareModal(true);
-  };
+  }, []);
 
-  const handleCopyLink = () => {
+  const handleCopyLink = useCallback(() => {
     const referralLink = `https://project-mc-tan.vercel.app/register?ref=${userId}`;
     navigator.clipboard.writeText(referralLink).then(() => {
       toast.success('Referral link copied to clipboard!');
@@ -1748,13 +1754,13 @@ useEffect(() => {
       console.error('Failed to copy link:', err);
       toast.error('Failed to copy link. Please try again.');
     });
-  };
+  }, [userId]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.setItem('loggedOut', 'true');
     disconnect();
     navigate('/');
-  };
+  }, [disconnect, navigate]);
 
   // Enhanced debugging with more detailed information
   useEffect(() => {
@@ -2236,9 +2242,9 @@ useEffect(() => {
   const currentItems = filteredIncomeHistory.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredIncomeHistory.length / itemsPerPage);
 
-  const handlePageChange = (pageNumber) => {
+  const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
-  };
+  }, []);
 
   // Income History Table Component
   const IncomeHistoryTable = () => (
@@ -2859,7 +2865,7 @@ useEffect(() => {
                 Your ID: <span className="text-[#F5C45E]">{userId}</span>
               </div>
             </div>
-            <TeamMatrix userId={userId} mynncryptConfig={mynncryptConfig} />
+            <MemoizedTeamMatrix userId={userId} mynncryptConfig={mynncryptConfig} />
           </div>
         );
       case 'treeview':
@@ -2884,7 +2890,7 @@ useEffect(() => {
                 </ul>
               </div>
               {userId ? (
-                <TeamTree userId={userId} mynncryptConfig={mynncryptConfig} />
+                <MemoizedTeamTree userId={userId} mynncryptConfig={mynncryptConfig} />
               ) : (
                 <p className="text-gray-400">Please connect your wallet to view the team tree.</p>
               )}
@@ -2894,7 +2900,7 @@ useEffect(() => {
       case 'noblegift':
         // Use new MynnGiftTabs component with hybrid approach
         return (
-          <MynnGiftTabs
+          <MemoizedMynnGiftTabs
             mynngiftConfig={mynngiftConfig}
             mynncryptConfig={mynncryptConfig}
           />
@@ -3268,4 +3274,11 @@ useEffect(() => {
   );
 }
 
-export default Dashboard;
+export default React.memo(Dashboard, (prevProps, nextProps) => {
+  // Return true if props are equal (don't re-render)
+  return (
+    prevProps.mynncryptConfig === nextProps.mynncryptConfig &&
+    prevProps.mynngiftConfig === nextProps.mynngiftConfig &&
+    prevProps.platformWalletConfig === nextProps.platformWalletConfig
+  );
+});
