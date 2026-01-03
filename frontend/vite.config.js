@@ -18,6 +18,9 @@ export default defineConfig({
       compress: {
         drop_console: true, // Remove console logs in production
       },
+      format: {
+        comments: false, // Remove all comments
+      },
     },
     rollupOptions: {
       output: {
