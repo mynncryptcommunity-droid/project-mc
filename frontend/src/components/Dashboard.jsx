@@ -1116,12 +1116,9 @@ useEffect(() => {
 
   // Process income history data with enhanced error handling and real-time updates
   useEffect(() => {
-    console.log('Income History Raw:', incomeHistoryRaw);
     if (incomeHistoryRaw && Array.isArray(incomeHistoryRaw)) {
       try {
-        console.log('Processing new income history data');
         const processedHistory = incomeHistoryRaw.map(income => {
-          console.log('Processing income entry:', income);
           if (!income) return null;
           
           const layer = Number(income.layer ?? income.level ?? income.userLevel ?? 0);
@@ -1132,7 +1129,6 @@ useEffect(() => {
           // MynnGift donations are recorded with layer = user's upgrade level (2-9)
           // and senderId === receiverId (self-referential)
           if (layer >= 2 && layer <= 9 && senderId === receiverId) {
-            console.log('Filtering out MynnGift donation entry:', income);
             return null; // Skip MynnGift entries from income history
           }
           
