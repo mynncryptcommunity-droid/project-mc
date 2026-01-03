@@ -573,15 +573,27 @@ function Dashboard({ mynncryptConfig, mynngiftConfig, platformWalletConfig }) {
   // Format MynnGift status from contract (translate to English)
   const formatMynnGiftStatus = (status) => {
     if (!status) return 'Loading...';
-    const statusMap = {
-      'tidak aktif': 'Not Active',
-      'Tidak Aktif': 'Not Active',
-      'belum aktif': 'Not Active',
-      'Belum Aktif': 'Not Active',
-      'aktif': 'Active',
-      'Aktif': 'Active',
-    };
-    return statusMap[status] || status; // Return original if not found in map
+    
+    // Normalize status to lowercase for comparison
+    const statusLower = status.toLowerCase();
+    
+    // Check for "tidak aktif" or "belum aktif" variations (case-insensitive)
+    if (statusLower.includes('tidak aktif') || statusLower.includes('belum aktif')) {
+      return 'Not Active';
+    }
+    
+    // Check for "aktif" (case-insensitive)
+    if (statusLower.includes('aktif')) {
+      return 'Active';
+    }
+    
+    // Check for English status terms (shouldn't need translation)
+    if (statusLower.includes('donor') || statusLower.includes('recipient')) {
+      return status; // Already in English
+    }
+    
+    // Default: return original status
+    return status;
   };
 
   const { address, isConnected } = useAccount();
