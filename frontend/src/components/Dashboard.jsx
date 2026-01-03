@@ -187,11 +187,13 @@ const sidebarStyles = `
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease;
+    pointer-events: none;
   }
 
   .overlay.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 
   .golden-button {
@@ -3066,7 +3068,10 @@ useEffect(() => {
           {/* Sidebar Overlay for Small Screens */}
           <div 
             className={`overlay ${isSidebarOpen ? 'active' : ''} md:hidden`} 
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsSidebarOpen(false);
+            }}
             role="presentation"
             aria-hidden={!isSidebarOpen}
           ></div>
@@ -3082,7 +3087,11 @@ useEffect(() => {
               {/* Navigation Items */}
               <nav className="space-y-4 pt-4">
                 <button
-                  onClick={() => { setActiveSection('dashboard'); setIsSidebarOpen(false); } }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSection('dashboard');
+                    setTimeout(() => setIsSidebarOpen(false), 100);
+                  }}
                   className={`sidebar-item w-full flex items-center px-4 py-3 rounded-lg ${activeSection === 'dashboard' ? 'bg-[#4DA8DA]/20 text-[#F5C45E]' : 'text-[#4DA8DA] hover:bg-[#4DA8DA]/10'}`}
                 >
                   <ChartBarIcon className="w-6 h-6" />
@@ -3090,7 +3099,11 @@ useEffect(() => {
                 </button>
 
                 <button
-                  onClick={() => { setActiveSection('timsaya'); setIsSidebarOpen(false); } }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSection('timsaya');
+                    setTimeout(() => setIsSidebarOpen(false), 100);
+                  }}
                   className={`sidebar-item w-full flex items-center px-4 py-3 rounded-lg ${activeSection === 'timsaya' ? 'bg-[#4DA8DA]/20 text-[#F5C45E]' : 'text-[#4DA8DA] hover:bg-[#4DA8DA]/10'}`}
                 >
                   <UsersIcon className="w-6 h-6" />
@@ -3098,7 +3111,11 @@ useEffect(() => {
                 </button>
 
                 <button
-                  onClick={() => { setActiveSection('treeview'); setIsSidebarOpen(false); } }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSection('treeview');
+                    setTimeout(() => setIsSidebarOpen(false), 100);
+                  }}
                   className={`sidebar-item w-full flex items-center px-4 py-3 rounded-lg ${activeSection === 'treeview' ? 'bg-[#4DA8DA]/20 text-[#F5C45E]' : 'text-[#4DA8DA] hover:bg-[#4DA8DA]/10'}`}
                 >
                   <ShareIcon className="w-6 h-6" />
@@ -3106,7 +3123,11 @@ useEffect(() => {
                 </button>
 
                 <button
-                  onClick={() => { setActiveSection('noblegift'); setIsSidebarOpen(false); } }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSection('noblegift');
+                    setTimeout(() => setIsSidebarOpen(false), 100);
+                  }}
                   className={`sidebar-item w-full flex items-center px-4 py-3 rounded-lg ${activeSection === 'noblegift' ? 'bg-[#4DA8DA]/20 text-[#F5C45E]' : 'text-[#4DA8DA] hover:bg-[#4DA8DA]/10'}`}
                 >
                   <GiftIcon className="w-6 h-6" />
