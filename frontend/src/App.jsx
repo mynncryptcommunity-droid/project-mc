@@ -2,7 +2,7 @@ import { createConfig, WagmiProvider } from 'wagmi';
 import { http, createPublicClient } from 'viem';
 import { injected, walletConnect } from 'wagmi/connectors';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useConnect, useAccount } from 'wagmi';
 import Header from './components/Header';
@@ -10,13 +10,16 @@ import Hero from './components/Hero';
 import About from './components/About';
 import Testimoni from './components/Testimoni';
 import Footer from './components/Footer';
-import Dashboard from './components/Dashboard';
 import Register from './components/Register';
-import DashboardAdmin from './pages/dashboardadmin';
 import mynncryptAbiRaw from './abis/MynnCrypt.json';
 import mynngiftAbiRaw from './abis/MynnGift.json';
 import HowItWorks from './components/HowItWorks';
 import NetworkDetector from './components/NetworkDetector';
+import LoadingSpinner from './components/LoadingSpinner';
+
+// ✅ OPTIMIZATION: Lazy load heavy components for code splitting
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const DashboardAdmin = lazy(() => import('./pages/dashboardadmin'));
 
 // Extract ABI from Hardhat artifact format
 const mynncryptAbi = mynncryptAbiRaw.abi || mynncryptAbiRaw;
@@ -382,25 +385,29 @@ function MainContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
         <Route
           path="/dashboard"
           element={
-            <div className="page-transition">
-              <Dashboard
-                mynncryptConfig={mynncryptConfig}
-                mynngiftConfig={mynngiftConfig}
-                publicClient={publicClient}
-              />
-            </div>
+            <Suspense fallback={<div className="page-transition"><LoadingSpinner message="Loading Dashboard..." size="large" /></div>}>
+              <div className="page-transition">
+                <Dashboard
+                  mynncryptConfig={mynncryptConfig}
+                  mynngiftConfig={mynngiftConfig}
+                  publicClient={publicClient}
+                />
+              </div>
+            </Suspense>
           }
         />
         <Route
           path="/admin"
           element={
-            <div className="page-transition">
-              <DashboardAdmin
-                mynncryptConfig={mynncryptConfig}
-                mynngiftConfig={mynngiftConfig}
-                publicClient={publicClient}
-              />
-            </div>
+            <Suspense fallback={<div className="page-transition"><LoadingSpinner message="Loading Admin Dashboard..." size="large" /></div>}>
+              <div className="page-transition">
+                <DashboardAdmin
+                  mynncryptConfig={mynncryptConfig}
+                  mynngiftConfig={mynngiftConfig}
+                  publicClient={publicClient}
+                />
+              </div>
+            </Suspense>
           }
         />
         <Route
