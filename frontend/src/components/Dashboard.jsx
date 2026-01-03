@@ -1369,6 +1369,12 @@ useEffect(() => {
       return;
     }
     
+    // Validate direct team requirement (minimum 2)
+    if ((userInfo?.directTeam || 0) < 2) {
+      toast.error('You need minimum 2 direct team members to be eligible for royalty claims');
+      return;
+    }
+    
     // Validate royalty income exists
     if (!userInfo?.royaltyIncome || BigInt(userInfo.royaltyIncome) === 0n) {
       toast.error('No royalty income to claim');
@@ -2841,9 +2847,9 @@ useEffect(() => {
                 </p>
                   <button
                     onClick={handleClaimRoyalty}
-                  disabled={!userInfo?.royaltyIncome || BigInt(userInfo?.royaltyIncome || 0n) === 0n || isClaiming || (userInfo?.level !== 8 && userInfo?.level !== 12)}
+                  disabled={!userInfo?.royaltyIncome || BigInt(userInfo?.royaltyIncome || 0n) === 0n || isClaiming || (userInfo?.level !== 8 && userInfo?.level !== 12) || (userInfo?.directTeam || 0) < 2}
                   className="golden-button mt-2"
-                  title={userInfo?.level !== 8 && userInfo?.level !== 12 ? 'Claim royalty only available at level 8 and 12' : 'Claim your royalty income'}
+                  title={((userInfo?.level !== 8 && userInfo?.level !== 12) ? 'Claim royalty only available at level 8 and 12' : ((userInfo?.directTeam || 0) < 2 ? 'Need minimum 2 direct team members to be eligible for royalty' : 'Claim your royalty income'))}
                   >
                     {isClaiming ? 'Claiming...' : 'Claim Royalty'}
                   </button>
