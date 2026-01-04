@@ -1404,8 +1404,8 @@ useEffect(() => {
       return;
     }
     
-    // Validate royalty income exists
-    if (!userInfo?.royaltyIncome || BigInt(userInfo.royaltyIncome) === 0n) {
+    // ✅ Validate royalty income exists (use getRoyaltyIncome mapping, not buggy struct field)
+    if (!royaltyIncome || BigInt(royaltyIncome || 0n) === 0n) {
       toast.error('No royalty income to claim');
       return;
     }
@@ -1420,7 +1420,7 @@ useEffect(() => {
     } catch (error) {
       toast.error('Claim failed: ' + error.message);
     }
-  }, [claimRoyalty, mynncryptConfig, userInfo]);
+  }, [claimRoyalty, mynncryptConfig, userInfo, royaltyIncome]);
 
   // Process income event function
   const processIncomeEvent = useCallback((event, type, currentUserId) => { // Added currentUserId as explicit param
@@ -2871,11 +2871,11 @@ useEffect(() => {
               <div className="bg-[#1A3A6A] w-full max-w-full p-3 sm:p-6 rounded-lg shadow-lg">
                 <h3 className="text-lg font-semibold text-[#F5C45E] mb-2">Claimable Royalty Balance</h3>
                 <p className="text-2xl font-bold text-white">
-                  {userInfo?.royaltyIncome ? ethers.formatEther(userInfo.royaltyIncome) : '0'} opBNB
+                  {royaltyIncome ? ethers.formatEther(royaltyIncome) : '0'} opBNB
                 </p>
                   <button
                     onClick={handleClaimRoyalty}
-                  disabled={!userInfo?.royaltyIncome || BigInt(userInfo?.royaltyIncome || 0n) === 0n || isClaiming || isConfirmingClaimRoyalty || (userInfo?.level !== 8 && userInfo?.level !== 12) || (userInfo?.directTeam || 0) < 2}
+                  disabled={!royaltyIncome || BigInt(royaltyIncome || 0n) === 0n || isClaiming || isConfirmingClaimRoyalty || (userInfo?.level !== 8 && userInfo?.level !== 12) || (userInfo?.directTeam || 0) < 2}
                   className="golden-button mt-2"
                   title={((userInfo?.level !== 8 && userInfo?.level !== 12) ? 'Claim royalty only available at level 8 and 12' : ((userInfo?.directTeam || 0) < 2 ? 'Need minimum 2 direct team members to be eligible for royalty' : 'Claim your royalty income'))}
                   >
