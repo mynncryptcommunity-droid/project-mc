@@ -1061,6 +1061,99 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           )}
       </div>
 
+      {/* Waiting Queue Details - New Section */}
+      {nobleGiftRank && ranksData[Number(nobleGiftRank)] && ranksData[Number(nobleGiftRank)].waitingQueue.length > 0 && (
+        <div className="waiting-queue-details mt-8 w-full max-w-4xl bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">
+          <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">⏳ Waiting Queue Details</h3>
+          
+          {/* Queue Summary */}
+          <div className="mb-6 p-4 bg-[#102E50]/50 rounded-lg border border-[#4DA8DA]/30">
+            <div className="grid grid-cols-3 gap-4 text-center mb-4">
+              <div>
+                <p className="text-gray-400 text-xs mb-1">CURRENT RANK</p>
+                <p className="text-2xl font-bold text-[#F5C45E]">{getNobleGiftRankName(Number(nobleGiftRank))}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-1">YOUR POSITION</p>
+                <p className="text-2xl font-bold text-[#FFD700]">#{Number(queuePosition) || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-1">QUEUE LENGTH</p>
+                <p className="text-2xl font-bold text-[#4DA8DA]">{ranksData[Number(nobleGiftRank)].waitingQueue.length}</p>
+              </div>
+            </div>
+            
+            {queuePosition && Number(queuePosition) <= 3 && (
+              <div className="text-center p-3 bg-[#F5C45E]/20 rounded-lg border border-[#F5C45E]/50">
+                <p className="text-[#F5C45E] font-semibold">🎯 You're close! Position #{Number(queuePosition)} will receive funds soon!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Waiting Queue List */}
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-[#4DA8DA] mb-4">Queue Order (By User ID)</p>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {ranksData[Number(nobleGiftRank)].waitingQueue.map((userAddress, index) => {
+                const isCurrentUser = userAddress && userAddress.toLowerCase() === (userAddress || '').toLowerCase();
+                const position = index + 1;
+                return (
+                  <div 
+                    key={index}
+                    className={`p-3 rounded-lg border-l-4 transition-all duration-200 ${
+                      isCurrentUser 
+                        ? 'bg-[#F5C45E]/20 border-[#F5C45E] text-[#F5C45E]' 
+                        : 'bg-[#102E50]/50 border-[#4DA8DA] hover:bg-[#1A3A6A] text-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                          position === 1 ? 'bg-[#FFD700] text-[#102E50]' : 'bg-[#4DA8DA] text-white'
+                        }`}>
+                          {position}
+                        </div>
+                        <div>
+                          <p className="text-xs opacity-75">User ID</p>
+                          <p className="font-mono font-semibold">{userAddress.slice(0, 8)}...{userAddress.slice(-6)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {position === 1 && <span className="inline-block px-3 py-1 bg-[#FFD700] text-[#102E50] rounded-full text-xs font-bold">NEXT RECEIVER</span>}
+                        {isCurrentUser && <span className="inline-block px-3 py-1 bg-[#F5C45E] text-[#102E50] rounded-full text-xs font-bold">YOU</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Estimated Payment Info */}
+          {ranksData[Number(nobleGiftRank)] && (
+            <div className="mt-6 p-4 bg-[#102E50]/50 rounded-lg border border-[#4DA8DA]/30">
+              <p className="text-xs text-gray-400 mb-2">RANK PROGRESS</p>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 bg-[#1A3A6A] rounded-full h-3 overflow-hidden border border-[#4DA8DA]/30">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] transition-all duration-500"
+                    style={{
+                      width: `${(ranksData[Number(nobleGiftRank)].donors.length / Number(maxDonorsPerRank || 6)) * 100}%`
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-semibold text-[#F5C45E]">
+                  {ranksData[Number(nobleGiftRank)].donors.length}/{Number(maxDonorsPerRank || 6)} Donors
+                </span>
+              </div>
+              {ranksData[Number(nobleGiftRank)].donors.length === Number(maxDonorsPerRank || 6) && (
+                <p className="text-xs text-[#00FF88] font-semibold mt-2">✅ Rank is FULL! Payments will be distributed soon!</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Recent MynnGift Activity History - Enhanced */}
       <div className="recent-events mt-8 w-full max-w-4xl bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">
         <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">📊 Recent MynnGift Activity</h3>
