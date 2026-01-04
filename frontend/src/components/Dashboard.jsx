@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAccount, useReadContract, useWriteContract, useDisconnect, useWaitForTransactionReceipt } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ethers } from 'ethers';
@@ -595,8 +596,8 @@ const handleContractError = (error, context) => {
   
   toast.error(errorMessage);
 };
-
 function Dashboard({ mynncryptConfig, mynngiftConfig, platformWalletConfig }) {
+  const queryClient = useQueryClient();
   // Format MynnGift status from contract (translate to English)
   const formatMynnGiftStatus = (status) => {
     if (!status) return 'Loading...';
@@ -778,6 +779,7 @@ useEffect(() => {
     functionName: 'userInfo',
     args: userId ? [userId] : undefined,
     enabled: !!userId,
+    watch: true,  // ✅ Enable real-time updates
   });
 
   // Memoize userInfo with corrected income categorization
@@ -1091,7 +1093,7 @@ useEffect(() => {
 
   // Fetch detailed income history with watch enabled
   // eslint-disable-next-line no-unused-vars
-  const { data: incomeHistoryRaw, isLoading: incomeHistoryLoading, error: incomeHistoryError } = useReadContract({
+  const { data: incomeHistoryRaw, isLoading: incomeHistoryLoading, error: incomeHistoryError, refetch: refetchIncomeHistory } = useReadContract({
     ...mynncryptConfig,
     functionName: 'getIncome',
     args: userId !== undefined && userId !== null ? [userId] : undefined,
@@ -1262,9 +1264,23 @@ useEffect(() => {
   useEffect(() => {
     if (isConfirmedClaimRoyalty) {
       console.log('✅ Claim Royalty transaction confirmed, refetching user data...');
-      Promise.all([refetchUserInfo(), refetchUserId()]);
+      
+      // ✅ Invalidate all contract query caches to force fresh reads
+      queryClient.invalidateQueries({ queryKey: ['readContract'] });
+      
+      // ✅ Then refetch specific data
+      refetchUserInfo().then(() => {
+        console.log('✅ User info refetched');
+      }).catch(err => console.error('Error refetching user info:', err));
+      refetchUserId().then(() => {
+        console.log('✅ User ID refetched');
+      }).catch(err => console.error('Error refetching user ID:', err));
+      // ✅ Also refetch income history to show new royalty in transaction list
+      refetchIncomeHistory().then(() => {
+        console.log('✅ Income history refetched');
+      }).catch(err => console.error('Error refetching income history:', err));
     }
-  }, [isConfirmedClaimRoyalty, refetchUserInfo, refetchUserId]);
+  }, [isConfirmedClaimRoyalty, refetchUserInfo, refetchUserId, refetchIncomeHistory, queryClient]);
 
   // Mapping level ke nama rank
   const rankNames = {
