@@ -1249,9 +1249,22 @@ useEffect(() => {
   }, [levelIncomeBreakdownRaw]);
 
   const { writeContract: upgrade, isPending: isUpgrading } = useWriteContract();
-  const { writeContract: claimRoyalty, isPending: isClaiming } = useWriteContract();
+  const { writeContract: claimRoyalty, isPending: isClaiming, data: hashClaimRoyalty } = useWriteContract();
   // eslint-disable-next-line no-unused-vars
   const { writeContract: autoUpgrade, isPending: isAutoUpgrading } = useWriteContract();
+  
+  // ✅ Wait for claim royalty transaction confirmation
+  const { isLoading: isConfirmingClaimRoyalty, isSuccess: isConfirmedClaimRoyalty } = useWaitForTransactionReceipt({
+    hash: hashClaimRoyalty,
+  });
+  
+  // ✅ Auto-refetch when claim royalty is confirmed
+  useEffect(() => {
+    if (isConfirmedClaimRoyalty) {
+      console.log('✅ Claim Royalty transaction confirmed, refetching user data...');
+      Promise.all([refetchUserInfo(), refetchUserId()]);
+    }
+  }, [isConfirmedClaimRoyalty, refetchUserInfo, refetchUserId]);
 
   // Mapping level ke nama rank
   const rankNames = {
@@ -1386,13 +1399,12 @@ useEffect(() => {
         ...mynncryptConfig,
         functionName: 'claimRoyalty',
       });
-      toast.success('Royalty claimed successfully!');
-      refetchUserInfo();
-      refetchUserId();
+      toast.success('Claim royalty transaction sent! Waiting for confirmation...');
+      // ✅ Transaction confirmation will trigger auto-refetch via useEffect above
     } catch (error) {
       toast.error('Claim failed: ' + error.message);
     }
-  }, [claimRoyalty, mynncryptConfig, refetchUserInfo, refetchUserId, userInfo]);
+  }, [claimRoyalty, mynncryptConfig, userInfo]);
 
   // Process income event function
   const processIncomeEvent = useCallback((event, type, currentUserId) => { // Added currentUserId as explicit param
@@ -2847,11 +2859,11 @@ useEffect(() => {
                 </p>
                   <button
                     onClick={handleClaimRoyalty}
-                  disabled={!userInfo?.royaltyIncome || BigInt(userInfo?.royaltyIncome || 0n) === 0n || isClaiming || (userInfo?.level !== 8 && userInfo?.level !== 12) || (userInfo?.directTeam || 0) < 2}
+                  disabled={!userInfo?.royaltyIncome || BigInt(userInfo?.royaltyIncome || 0n) === 0n || isClaiming || isConfirmingClaimRoyalty || (userInfo?.level !== 8 && userInfo?.level !== 12) || (userInfo?.directTeam || 0) < 2}
                   className="golden-button mt-2"
                   title={((userInfo?.level !== 8 && userInfo?.level !== 12) ? 'Claim royalty only available at level 8 and 12' : ((userInfo?.directTeam || 0) < 2 ? 'Need minimum 2 direct team members to be eligible for royalty' : 'Claim your royalty income'))}
                   >
-                    {isClaiming ? 'Claiming...' : 'Claim Royalty'}
+                    {isClaiming ? 'Claiming...' : isConfirmingClaimRoyalty ? 'Confirming...' : 'Claim Royalty'}
                   </button>
                 <p className="text-xs text-yellow-400 mt-2">Claim royalty can only be done at level 8 and 12 according to smart contract terms.</p>
               </div>
