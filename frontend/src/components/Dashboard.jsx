@@ -1146,8 +1146,9 @@ useEffect(() => {
           const incomeType = ((lyr) => {
               if (lyr === 0) return IncomeType.REFERRAL;
               if (lyr === 1) return IncomeType.SPONSOR;
+              if (lyr === 4) return IncomeType.ROYALTY;  // ✅ New: Type 4 = Royalty (from claimRoyalty)
               if (lyr >= 10) return IncomeType.UPLINE;
-              // Fallback for types not explicitly mapped, or royalty which may not have a layer in this context
+              // Fallback for types not explicitly mapped
               return IncomeType.REFERRAL; 
           })(layer);
 
