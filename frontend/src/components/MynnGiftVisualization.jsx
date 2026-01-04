@@ -298,8 +298,8 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     });
     const { data: waitingQueue, refetch: refetchWaitingQueue } = useReadContract({
       ...mynngiftConfig,
-      functionName: 'getRankWaitingQueue',
-      args: [rank],
+      functionName: 'getRankWaitingQueueByStream',
+      args: [rank, streamEnum],
       enabled: true,
     });
     const { data: currentRankStatus, refetch: refetchCurrentRankStatus } = useReadContract({
