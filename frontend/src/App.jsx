@@ -133,31 +133,46 @@ function App() {
 function AppContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
   const { isConnected } = useAccount();
   const { connectAsync, connectors } = useConnect();
+  const [hasAttemptedReconnect, setHasAttemptedReconnect] = useState(false);
 
   useEffect(() => {
     const tryReconnect = async () => {
       try {
+        // Jangan reconnect jika user sudah logout
+        if (localStorage.getItem('loggedOut')) {
+          return;
+        }
+
         // Check if window.ethereum exists before accessing it
         if (!window.ethereum) {
           console.warn('No Ethereum provider detected');
           return;
         }
+
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0 && !isConnected) {
+        
+        // Hanya reconnect jika:
+        // 1. Ada accounts di MetaMask
+        // 2. Belum connected ke Wagmi
+        // 3. Belum attempt reconnect
+        if (accounts.length > 0 && !isConnected && !hasAttemptedReconnect) {
+          console.log('Attempting to reconnect to MetaMask...');
+          
           // Cari connector injected (untuk MetaMask, TokenPocket, dll)
           const connector = connectors.find((c) => c.id === 'injected') || connectors[0];
-          if (connector && !localStorage.getItem('loggedOut')) {
+          if (connector) {
             await connectAsync({ connector });
-            localStorage.removeItem('loggedOut'); // Hapus flag setelah reconnect
+            setHasAttemptedReconnect(true);
           }
         }
       } catch (error) {
         console.error('AppContent.jsx: Failed to reconnect:', error);
+        setHasAttemptedReconnect(true);
       }
     };
 
     tryReconnect();
-  }, [isConnected, connectAsync, connectors]);
+  }, []);
 
   return (
     <BrowserRouter>
