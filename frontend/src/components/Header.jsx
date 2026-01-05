@@ -305,26 +305,56 @@ export default function Header({ mynncryptConfig }) {
     }
   };
 
-  const handleConnect = (connector) => {
+  const handleConnect = async (connector) => {
     console.log('Header.jsx - Attempting to connect with:', connector.id, 'isMobileMetaMask:', isMobileMetaMask);
-    const connectorToUse = connector === walletConnect
-      ? walletConnect({ projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'acdd07061043065cac8c0dbe90363982' })
-      : connector;
-    connect({ connector: connectorToUse }, {
-      onSuccess: () => {
-        console.log('Header.jsx - Connection successful');
-        setShowModal(true);
-      },
-      onError: (error) => {
-        console.error('Header.jsx - Connect error:', error.message);
-        // For MetaMask mobile browser, provide better error message
-        if (isMobileMetaMask && error.message?.includes('ethereum')) {
-          alert('MetaMask tidak terdeteksi. Pastikan Anda membuka app ini di browser dalam MetaMask.');
+    
+    // Special handling for MetaMask mobile browser
+    if (isMobileMetaMask && connector.id === 'injected') {
+      try {
+        console.log('Header.jsx - MetaMask mobile: Requesting accounts explicitly...');
+        // Explicitly request accounts from MetaMask mobile
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        console.log('Header.jsx - Accounts requested successfully:', accounts);
+        
+        // Small delay to ensure MetaMask is ready
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Now proceed with Wagmi connect
+        const connectorToUse = connector;
+        connect({ connector: connectorToUse }, {
+          onSuccess: () => {
+            console.log('Header.jsx - Connection successful');
+            setShowModal(true);
+          },
+          onError: (error) => {
+            console.error('Header.jsx - Connect error after account request:', error.message);
+            alert('Gagal menghubungkan wallet setelah request accounts: ' + error.message);
+          },
+        });
+      } catch (error) {
+        console.error('Header.jsx - eth_requestAccounts failed:', error.message);
+        if (error.code === 4001) {
+          alert('Anda menolak koneksi. Silakan coba lagi dan approve akses MetaMask.');
         } else {
-          alert('Gagal menghubungkan wallet: ' + (error.message || 'Wallet tidak terdeteksi. Pastikan MetaMask atau Trust Wallet terinstal.'));
+          alert('Error requesting accounts: ' + error.message);
         }
-      },
-    });
+      }
+    } else {
+      // Standard handling for desktop or WalletConnect
+      const connectorToUse = connector === walletConnect
+        ? walletConnect({ projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'acdd07061043065cac8c0dbe90363982' })
+        : connector;
+      connect({ connector: connectorToUse }, {
+        onSuccess: () => {
+          console.log('Header.jsx - Connection successful');
+          setShowModal(true);
+        },
+        onError: (error) => {
+          console.error('Header.jsx - Connect error:', error.message);
+          alert('Gagal menghubungkan wallet: ' + (error.message || 'Wallet tidak terdeteksi. Pastikan MetaMask atau Trust Wallet terinstal.'));
+        },
+      });
+    }
   };
 
   const navItems = [

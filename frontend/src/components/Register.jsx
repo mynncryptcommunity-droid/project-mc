@@ -259,23 +259,52 @@ export default function Register({ mynncryptConfig }) {
     }
   };
 
-  const handleConnect = (connector) => {
+  const handleConnect = async (connector) => {
     console.log('Register.jsx - Attempting to connect with:', connector.id, 'isMobileMetaMask:', isMobileMetaMask);
-    connect({ connector }, {
-      onSuccess: () => {
-        console.log('Register.jsx - Connection successful');
-        setShowModal(true); // Buka modal lagi setelah koneksi berhasil
-      },
-      onError: (error) => {
-        console.error('Register.jsx - Connect error:', error.message);
-        // For MetaMask mobile browser, provide better error message
-        if (isMobileMetaMask && error.message?.includes('ethereum')) {
-          alert('MetaMask tidak terdeteksi. Pastikan Anda membuka app ini di browser dalam MetaMask.');
+    
+    // Special handling for MetaMask mobile browser
+    if (isMobileMetaMask && connector.id === 'injected') {
+      try {
+        console.log('Register.jsx - MetaMask mobile: Requesting accounts explicitly...');
+        // Explicitly request accounts from MetaMask mobile
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        console.log('Register.jsx - Accounts requested successfully:', accounts);
+        
+        // Small delay to ensure MetaMask is ready
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Now proceed with Wagmi connect
+        connect({ connector }, {
+          onSuccess: () => {
+            console.log('Register.jsx - Connection successful');
+            setShowModal(true);
+          },
+          onError: (error) => {
+            console.error('Register.jsx - Connect error after account request:', error.message);
+            alert('Gagal menghubungkan wallet setelah request accounts: ' + error.message);
+          },
+        });
+      } catch (error) {
+        console.error('Register.jsx - eth_requestAccounts failed:', error.message);
+        if (error.code === 4001) {
+          alert('Anda menolak koneksi. Silakan coba lagi dan approve akses MetaMask.');
         } else {
-          alert('Gagal menghubungkan wallet: ' + error.message);
+          alert('Error requesting accounts: ' + error.message);
         }
-      },
-    });
+      }
+    } else {
+      // Standard handling for desktop or WalletConnect
+      connect({ connector }, {
+        onSuccess: () => {
+          console.log('Register.jsx - Connection successful');
+          setShowModal(true);
+        },
+        onError: (error) => {
+          console.error('Register.jsx - Connect error:', error.message);
+          alert('Gagal menghubungkan wallet: ' + error.message);
+        },
+      });
+    }
   };
 
   return (
