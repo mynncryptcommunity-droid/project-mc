@@ -17,8 +17,21 @@ export default function Header({ mynncryptConfig }) {
   const [isSuccess, setIsSuccess] = useState(true);
   const [referralId, setReferralId] = useState('');
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isMobileMetaMask, setIsMobileMetaMask] = useState(false);
   const { address, isConnected, isConnecting } = useAccount();
   const { connect, error: connectError } = useConnect();
+
+  // Detect if MetaMask is running on mobile
+  useEffect(() => {
+    const detectMobileMetaMask = () => {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isMetaMaskBrowser = window.ethereum?.isMetaMask === true;
+      setIsMobileMetaMask(isMobile && isMetaMaskBrowser);
+      console.log('Mobile detection:', { isMobile, isMetaMaskBrowser, isMobileMetaMask: isMobile && isMetaMaskBrowser });
+    };
+    
+    detectMobileMetaMask();
+  }, []);
   const { 
     writeContract: register, 
     data: hash,
@@ -293,7 +306,7 @@ export default function Header({ mynncryptConfig }) {
   };
 
   const handleConnect = (connector) => {
-    console.log('Header.jsx - Attempting to connect with:', connector.id);
+    console.log('Header.jsx - Attempting to connect with:', connector.id, 'isMobileMetaMask:', isMobileMetaMask);
     const connectorToUse = connector === walletConnect
       ? walletConnect({ projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'acdd07061043065cac8c0dbe90363982' })
       : connector;
@@ -304,7 +317,12 @@ export default function Header({ mynncryptConfig }) {
       },
       onError: (error) => {
         console.error('Header.jsx - Connect error:', error.message);
-        alert('Gagal menghubungkan wallet: ' + (error.message || 'Wallet tidak terdeteksi. Pastikan MetaMask atau Trust Wallet terinstal.'));
+        // For MetaMask mobile browser, provide better error message
+        if (isMobileMetaMask && error.message?.includes('ethereum')) {
+          alert('MetaMask tidak terdeteksi. Pastikan Anda membuka app ini di browser dalam MetaMask.');
+        } else {
+          alert('Gagal menghubungkan wallet: ' + (error.message || 'Wallet tidak terdeteksi. Pastikan MetaMask atau Trust Wallet terinstal.'));
+        }
       },
     });
   };
@@ -1156,22 +1174,42 @@ export default function Header({ mynncryptConfig }) {
             ) : (
               <>
                 <p>Harap hubungkan wallet Anda untuk melanjutkan.</p>
-                <button
-                  className="btn wallet-button"
-                  onClick={() => handleConnect(injected())}
-                  disabled={isRegistering}
-                >
-                  <img src={metamaskLogo} alt="MetaMask Logo" />
-                  Connect MetaMask/Trust Wallet
-                </button>
-                <button
-                  className="btn wallet-button"
-                  onClick={() => handleConnect(walletConnect())}
-                  disabled={isRegistering}
-                >
-                  <img src={trustwalletLogo} alt="Trust Wallet Logo" />
-                  Connect Trust Wallet
-                </button>
+                {isMobileMetaMask ? (
+                  <>
+                    <p style={{ fontSize: '14px', color: '#FFD700', marginBottom: '15px' }}>
+                      ✅ MetaMask terdeteksi di browser Anda
+                    </p>
+                    <button
+                      className="btn wallet-button"
+                      onClick={() => handleConnect(injected())}
+                      disabled={isRegistering}
+                      style={{ marginBottom: '10px' }}
+                    >
+                      <img src={metamaskLogo} alt="MetaMask Logo" />
+                      Hubungkan MetaMask
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="btn wallet-button"
+                      onClick={() => handleConnect(injected())}
+                      disabled={isRegistering}
+                      style={{ marginBottom: '10px' }}
+                    >
+                      <img src={metamaskLogo} alt="MetaMask Logo" />
+                      Connect MetaMask
+                    </button>
+                    <button
+                      className="btn wallet-button"
+                      onClick={() => handleConnect(walletConnect())}
+                      disabled={isRegistering}
+                    >
+                      <img src={trustwalletLogo} alt="Wallet Connect Logo" />
+                      Connect via WalletConnect
+                    </button>
+                  </>
+                )}
                 <div className="register-link">
                   <p>
                     Tidak punya wallet?{' '}

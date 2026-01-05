@@ -13,8 +13,22 @@ export default function Register({ mynncryptConfig }) {
   const [referralId, setReferralId] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [isMobileMetaMask, setIsMobileMetaMask] = useState(false);
   const { address, isConnected, isConnecting, isDisconnected } = useAccount();
   const { connect, error: connectError } = useConnect();
+
+  // Detect if MetaMask is running on mobile
+  useEffect(() => {
+    const detectMobileMetaMask = () => {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isMetaMaskBrowser = window.ethereum?.isMetaMask === true;
+      setIsMobileMetaMask(isMobile && isMetaMaskBrowser);
+      console.log('Register.jsx - Mobile detection:', { isMobile, isMetaMaskBrowser });
+    };
+    
+    detectMobileMetaMask();
+  }, []);
+  
   const { 
     writeContract: register, 
     data: hash,
@@ -246,12 +260,20 @@ export default function Register({ mynncryptConfig }) {
   };
 
   const handleConnect = (connector) => {
+    console.log('Register.jsx - Attempting to connect with:', connector.id, 'isMobileMetaMask:', isMobileMetaMask);
     connect({ connector }, {
       onSuccess: () => {
+        console.log('Register.jsx - Connection successful');
         setShowModal(true); // Buka modal lagi setelah koneksi berhasil
       },
       onError: (error) => {
-        alert('Gagal menghubungkan wallet: ' + error.message);
+        console.error('Register.jsx - Connect error:', error.message);
+        // For MetaMask mobile browser, provide better error message
+        if (isMobileMetaMask && error.message?.includes('ethereum')) {
+          alert('MetaMask tidak terdeteksi. Pastikan Anda membuka app ini di browser dalam MetaMask.');
+        } else {
+          alert('Gagal menghubungkan wallet: ' + error.message);
+        }
       },
     });
   };
@@ -443,9 +465,14 @@ export default function Register({ mynncryptConfig }) {
               ) : (
                 <>
                   <p>Harap hubungkan wallet Anda untuk melanjutkan.</p>
+                  {isMobileMetaMask && (
+                    <p style={{ fontSize: '14px', color: '#FFD700', marginBottom: '15px', textAlign: 'center' }}>
+                      ✅ MetaMask terdeteksi di browser Anda
+                    </p>
+                  )}
                   <button
                     className="btn wallet-button"
-                    onClick={() => handleConnect(injected({ target: 'metaMask' }))}
+                    onClick={() => handleConnect(injected())}
                     disabled={isRegistering}
                     style={{
                       width: '100%',
@@ -473,36 +500,38 @@ export default function Register({ mynncryptConfig }) {
                     />
                     Connect MetaMask
                   </button>
-                  <button
-                    className="btn wallet-button"
-                    onClick={() => handleConnect(walletConnect({ projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'acdd07061043065cac8c0dbe90363982' }))}
-                    disabled={isRegistering}
-                    style={{
-                      width: '100%',
-                      height: '45px',
-                      background: '#fff',
-                      border: 'none',
-                      outline: 'none',
-                      borderRadius: '40px',
-                      boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-                      cursor: 'pointer',
-                      fontSize: '16px',
-                      color: '#333',
-                      fontWeight: '600',
-                      marginBottom: '15px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '10px',
-                    }}
-                  >
-                    <img
-                      src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg"
-                      alt="Trust Wallet Logo"
-                      style={{ width: '24px', height: '24px' }}
-                    />
-                    Connect Trust Wallet
-                  </button>
+                  {!isMobileMetaMask && (
+                    <button
+                      className="btn wallet-button"
+                      onClick={() => handleConnect(walletConnect({ projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'acdd07061043065cac8c0dbe90363982' }))}
+                      disabled={isRegistering}
+                      style={{
+                        width: '100%',
+                        height: '45px',
+                        background: '#fff',
+                        border: 'none',
+                        outline: 'none',
+                        borderRadius: '40px',
+                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        color: '#333',
+                        fontWeight: '600',
+                        marginBottom: '15px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                      }}
+                    >
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/d/d9/OP_logo.svg"
+                        alt="WalletConnect Logo"
+                        style={{ width: '24px', height: '24px' }}
+                      />
+                      Connect via WalletConnect
+                    </button>
+                  )}
                   <div className="register-link" style={{ fontSize: '14.5px', textAlign: 'center', margin: '20px 0 15px' }}>
                     <p>
                       Tidak punya wallet?{' '}

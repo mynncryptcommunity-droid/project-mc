@@ -463,6 +463,10 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           await rankInfo.refetchCurrentRankStatus();
           await rankInfo.refetchWaitingQueue();
         }
+        // Refetch gas subsidy pool when rank cycle completes
+        if (refetchGasSubsidyPool) {
+          await refetchGasSubsidyPool();
+        }
         setAnimationQueue(prev => [...prev, { type: 'RANK_CYCLE_COMPLETE', rank: Number(eventRank), cycleNumber: Number(eventCycleNumber), donors: eventDonors }]);
       });
     },
