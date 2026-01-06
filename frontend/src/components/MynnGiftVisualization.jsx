@@ -1203,8 +1203,8 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           <div className="space-y-2">
             <p className="text-sm font-semibold text-[#4DA8DA] mb-4">Queue Order (By User ID)</p>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {ranksData[Number(nobleGiftRank)].waitingQueue.map((userAddress, index) => {
-                const isCurrentUser = userAddress && userAddress.toLowerCase() === (userAddress || '').toLowerCase();
+              {ranksData[Number(nobleGiftRank)].waitingQueue.map((queueUserAddress, index) => {
+                const isCurrentUser = queueUserAddress && queueUserAddress.toLowerCase() === (userAddress || '').toLowerCase();
                 const position = index + 1;
                 return (
                   <div 
@@ -1224,7 +1224,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                         </div>
                         <div>
                           <p className="text-xs opacity-75">User ID</p>
-                          <p className="font-mono font-semibold">{userAddress.slice(0, 8)}...{userAddress.slice(-6)}</p>
+                          <p className="font-mono font-semibold">{queueUserAddress.slice(0, 8)}...{queueUserAddress.slice(-6)}</p>
                         </div>
                       </div>
                       <div className="text-right">
