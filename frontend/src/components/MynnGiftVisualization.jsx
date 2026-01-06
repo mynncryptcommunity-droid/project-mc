@@ -242,12 +242,21 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
 
   // --- 1. Ambil Data Awal dan Real-time dari Kontrak --- //
 
-  // User's NobleGift Rank
-  const { data: nobleGiftRank, refetch: refetchNobleGiftRank } = useReadContract({
+  // User's status as donor/receiver
+  const { data: isDonorStream, refetch: refetchIsDonor } = useReadContract({
     ...mynngiftConfig,
-    functionName: 'getUserRank',
+    functionName: streamType === 'streamA' ? 'isDonor_StreamA' : 'isDonor_StreamB',
     args: [userAddress],
     enabled: !!userAddress,
+    watch: true,  // ✅ Real-time update
+  });
+
+  const { data: isReceiverStream, refetch: refetchIsReceiver } = useReadContract({
+    ...mynngiftConfig,
+    functionName: streamType === 'streamA' ? 'isReceiver_StreamA' : 'isReceiver_StreamB',
+    args: [userAddress],
+    enabled: !!userAddress,
+    watch: true,  // ✅ Real-time update
   });
 
   // User's NobleGift Status
@@ -270,6 +279,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     ...mynngiftConfig,
     functionName: 'gasSubsidyPool',
     enabled: true,
+    watch: true,  // ✅ Watch for real-time updates
   });
 
   // Ambil nilai totalReceivers
@@ -277,6 +287,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     ...mynngiftConfig,
     functionName: 'totalReceivers',
     enabled: true,
+    watch: true,  // ✅ Watch for real-time updates
   });
 
   // Tambahkan hook untuk mengambil posisi antrean user
@@ -619,6 +630,19 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     return nobleGiftRankNames[rank] || 'N/A';
   }, []);
 
+  // Determine user role based on donor/receiver status
+  const getUserRoleStatus = useCallback(() => {
+    if (isReceiverStream) {
+      return { role: 'RECEIVER', color: '#00FF88', icon: '💚', description: 'Receiving funds' };
+    } else if (isDonorStream) {
+      return { role: 'DONOR', color: '#F5C45E', icon: '💛', description: 'Contributing to rank' };
+    } else if (queuePosition && Number(queuePosition) > 0) {
+      return { role: 'IN QUEUE', color: '#4DA8DA', icon: '⏳', description: `Position #${Number(queuePosition)}` };
+    } else {
+      return { role: 'INACTIVE', color: '#999999', icon: '⭕', description: 'Not active in this stream' };
+    }
+  }, [isDonorStream, isReceiverStream, queuePosition]);
+
   // Fungsi untuk translate status dari bahasa Indonesia ke Inggris
   const formatStatusDisplay = useCallback((status) => {
     if (!status) return 'Loading...';
@@ -668,6 +692,21 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           <div className="text-center sm:text-right">
             <p className="text-gray-400 text-sm mb-1">Queue</p>
             <p className="text-lg font-semibold text-[#FFD700]">{queuePosition && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'n/a'}</p>
+          </div>
+          <div className="text-center sm:text-right">
+            {(() => {
+              const roleStatus = getUserRoleStatus();
+              return (
+                <>
+                  <p className="text-gray-400 text-sm mb-1">Your Role</p>
+                  <div className="flex items-center justify-center sm:justify-end gap-2">
+                    <span style={{ color: roleStatus.color }} className="text-lg">{roleStatus.icon}</span>
+                    <p className="text-lg font-semibold" style={{ color: roleStatus.color }}>{roleStatus.role}</p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{roleStatus.description}</p>
+                </>
+              );
+            })()}
           </div>
         </div>
 
