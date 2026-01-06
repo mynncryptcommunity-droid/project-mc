@@ -292,7 +292,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     const rank = i + 1;
     const { data: currentDonors, refetch: refetchCurrentDonors } = useReadContract({
       ...mynngiftConfig,
-      functionName: 'getRankDonorHistory',
+      functionName: 'getRankDonorsFormattedByStream',  // ← CHANGED: Use current donors, not history
       args: [rank, streamEnum],
       enabled: true,
     });
