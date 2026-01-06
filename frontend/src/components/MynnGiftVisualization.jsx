@@ -259,12 +259,23 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     watch: true,  // ✅ Real-time update
   });
 
+  // Debug: Log status changes
+  useEffect(() => {
+    console.log('📊 STATUS DEBUG:', {
+      isDonorStream,
+      isReceiverStream,
+      queuePosition: queuePosition ? Number(queuePosition) : null,
+      nobleGiftRank: nobleGiftRank ? Number(nobleGiftRank) : null,
+    });
+  }, [isDonorStream, isReceiverStream, queuePosition, nobleGiftRank]);
+
   // User's NobleGift Status
   const { data: nobleGiftStatus, refetch: refetchNobleGiftStatus } = useReadContract({
     ...mynngiftConfig,
     functionName: 'getUserStatus',
     args: [userAddress],
     enabled: !!userAddress,
+    watch: true,  // ✅ Real-time update for status changes
   });
 
   // User's NobleGift Rank (needed for stream visualization)
@@ -493,6 +504,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           await refetchIsReceiver();
           await refetchQueuePosition();
           await refetchNobleGiftRank();
+          await refetchNobleGiftStatus();
           console.log('✅ User status refetch complete');
           
           // Also refetch next rank's data to show it's ready for new donors
