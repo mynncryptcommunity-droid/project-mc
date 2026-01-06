@@ -482,6 +482,20 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           await rankInfo.refetchCurrentRankStatus();
           await rankInfo.refetchWaitingQueue();
         }
+        
+        // Also refetch next rank's data to show it's ready for new donors
+        const nextRank = Number(eventRank) + 1;
+        if (nextRank <= 8) {
+          const nextRankInfo = ranksData[nextRank];
+          if (nextRankInfo && nextRankInfo.refetchDonors && nextRankInfo.refetchWaitingQueue) {
+            // Small delay to allow contract to fully process
+            setTimeout(async () => {
+              await nextRankInfo.refetchDonors();
+              await nextRankInfo.refetchWaitingQueue();
+            }, 500);
+          }
+        }
+        
         // Refetch gas subsidy pool when rank cycle completes
         if (refetchGasSubsidyPool) {
           await refetchGasSubsidyPool();
