@@ -473,43 +473,47 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     ...mynngiftConfig,
     eventName: 'RankCycleCompleted',
     onLogs(logs) {
-      logs.forEach(async log => {
-        const { rank: eventRank, cycleNumber: eventCycleNumber, donors: eventDonors } = log.args;
-        console.log(`RankCycleCompleted: Rank ${eventRank} completed cycle ${eventCycleNumber}`);
-        setIsProcessingCycle(prev => ({ ...prev, [Number(eventRank)]: true }));
+      // Use for...of instead of forEach to properly await async operations
+      (async () => {
+        for (const log of logs) {
+          const { rank: eventRank, cycleNumber: eventCycleNumber, donors: eventDonors } = log.args;
+          console.log(`RankCycleCompleted: Rank ${eventRank} completed cycle ${eventCycleNumber}`);
+          setIsProcessingCycle(prev => ({ ...prev, [Number(eventRank)]: true }));
 
-        const rankInfo = ranksData[Number(eventRank)];
-        if (rankInfo && rankInfo.refetchDonors && rankInfo.refetchCurrentRankStatus && rankInfo.refetchWaitingQueue) {
-          await rankInfo.refetchDonors();
-          await rankInfo.refetchCurrentRankStatus();
-          await rankInfo.refetchWaitingQueue();
-        }
-        
-        // CRITICAL: Refetch user's own status and queue position
-        await refetchIsDonor();
-        await refetchIsReceiver();
-        await refetchQueuePosition();
-        await refetchNobleGiftRank();
-        
-        // Also refetch next rank's data to show it's ready for new donors
-        const nextRank = Number(eventRank) + 1;
-        if (nextRank <= 8) {
-          const nextRankInfo = ranksData[nextRank];
-          if (nextRankInfo && nextRankInfo.refetchDonors && nextRankInfo.refetchWaitingQueue) {
-            // Small delay to allow contract to fully process
-            setTimeout(async () => {
+          const rankInfo = ranksData[Number(eventRank)];
+          if (rankInfo && rankInfo.refetchDonors && rankInfo.refetchCurrentRankStatus && rankInfo.refetchWaitingQueue) {
+            await rankInfo.refetchDonors();
+            await rankInfo.refetchCurrentRankStatus();
+            await rankInfo.refetchWaitingQueue();
+          }
+          
+          // CRITICAL: Refetch user's own status and queue position - MUST AWAIT
+          console.log('🔄 Refetching user status after rank cycle...');
+          await refetchIsDonor();
+          await refetchIsReceiver();
+          await refetchQueuePosition();
+          await refetchNobleGiftRank();
+          console.log('✅ User status refetch complete');
+          
+          // Also refetch next rank's data to show it's ready for new donors
+          const nextRank = Number(eventRank) + 1;
+          if (nextRank <= 8) {
+            const nextRankInfo = ranksData[nextRank];
+            if (nextRankInfo && nextRankInfo.refetchDonors && nextRankInfo.refetchWaitingQueue) {
+              // Small delay to allow contract to fully process
+              await new Promise(resolve => setTimeout(resolve, 500));
               await nextRankInfo.refetchDonors();
               await nextRankInfo.refetchWaitingQueue();
-            }, 500);
+            }
           }
+          
+          // Refetch gas subsidy pool when rank cycle completes
+          if (refetchGasSubsidyPool) {
+            await refetchGasSubsidyPool();
+          }
+          setAnimationQueue(prev => [...prev, { type: 'RANK_CYCLE_COMPLETE', rank: Number(eventRank), cycleNumber: Number(eventCycleNumber), donors: eventDonors }]);
         }
-        
-        // Refetch gas subsidy pool when rank cycle completes
-        if (refetchGasSubsidyPool) {
-          await refetchGasSubsidyPool();
-        }
-        setAnimationQueue(prev => [...prev, { type: 'RANK_CYCLE_COMPLETE', rank: Number(eventRank), cycleNumber: Number(eventCycleNumber), donors: eventDonors }]);
-      });
+      })();
     },
   });
 
