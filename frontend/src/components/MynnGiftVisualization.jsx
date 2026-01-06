@@ -943,7 +943,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                 })}
                 {rankInfo && rankInfo.waitingQueue.length > 0 && (
                   <g transform={`translate(${circleRadius + 60}, 0)`}>
-                    <text x="0" y="-40" fill="#4DA8DA" fontSize="18">Antrean:</text>
+                    <text x="0" y="-40" fill="#4DA8DA" fontSize="18">Queue:</text>
                     {rankInfo.waitingQueue.map((user, idx) => (
                       <g key={user} transform={`translate(${idx * 45}, -15)`}>
                         <image href={avatar} width="31" height="61" x="-15.5" y="-30.5" preserveAspectRatio="xMidYMid meet" />
@@ -1056,11 +1056,11 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                             animationQueue[0].type === 'USER_RANK_PROMOTE' ? '#8A2BE2' : '#4DA8DA'
               }}
             >
-              {animationQueue[0].type === 'DONATION' && `💛 Donasi diterima dari ${animationQueue[0].donor ? animationQueue[0].donor.slice(0, 6) : '-'}...`}
-              {animationQueue[0].type === 'RECEIVE_FUNDS' && `✅ Dana diterima oleh ${animationQueue[0].user ? animationQueue[0].user.slice(0, 6) : '-'}...`}
-              {animationQueue[0].type === 'JOIN_QUEUE' && `🚶 Antrean bergabung dari ${animationQueue[0].user ? animationQueue[0].user.slice(0, 6) : '-'}...`}
-              {animationQueue[0].type === 'RANK_CYCLE_COMPLETE' && `🏁 Siklus Rank ${animationQueue[0].rank} selesai!`}
-              {animationQueue[0].type === 'USER_RANK_PROMOTE' && `🏆 Selamat! Naik ke Rank ${animationQueue[0].toRank}!`}
+              {animationQueue[0].type === 'DONATION' && `💛 Donation received from ${animationQueue[0].donor ? animationQueue[0].donor.slice(0, 6) : '-'}...`}
+              {animationQueue[0].type === 'RECEIVE_FUNDS' && `✅ Funds received by ${animationQueue[0].user ? animationQueue[0].user.slice(0, 6) : '-'}...`}
+              {animationQueue[0].type === 'JOIN_QUEUE' && `🚶 Joined queue from ${animationQueue[0].user ? animationQueue[0].user.slice(0, 6) : '-'}...`}
+              {animationQueue[0].type === 'RANK_CYCLE_COMPLETE' && `🏁 Rank ${animationQueue[0].rank} cycle completed!`}
+              {animationQueue[0].type === 'USER_RANK_PROMOTE' && `🏆 Congratulations! Promoted to Rank ${animationQueue[0].toRank}!`}
             </div>
           )}
       </div>
@@ -1068,7 +1068,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
       {/* Waiting Queue Details - New Section */}
       {nobleGiftRank && ranksData[Number(nobleGiftRank)] && ranksData[Number(nobleGiftRank)].waitingQueue.length > 0 && (
         <div className="waiting-queue-details mt-8 w-full max-w-4xl bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">
-          <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">⏳ Waiting Queue Details</h3>
+          <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">⏳ Queue Details</h3>
           
           {/* Queue Summary */}
           <div className="mb-6 p-4 bg-[#102E50]/50 rounded-lg border border-[#4DA8DA]/30">
