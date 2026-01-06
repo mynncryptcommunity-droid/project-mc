@@ -640,12 +640,13 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
 
   // Determine user role based on donor/receiver status
   const getUserRoleStatus = useCallback(() => {
-    if (isReceiverStream) {
+    // Priority: Check queue position first
+    if (queuePosition && Number(queuePosition) > 0) {
+      return { role: 'IN QUEUE', color: '#4DA8DA', icon: '⏳', description: `Position #${Number(queuePosition)}` };
+    } else if (isReceiverStream) {
       return { role: 'RECEIVER', color: '#00FF88', icon: '💚', description: 'Receiving funds' };
     } else if (isDonorStream) {
       return { role: 'DONOR', color: '#F5C45E', icon: '💛', description: 'Contributing to rank' };
-    } else if (queuePosition && Number(queuePosition) > 0) {
-      return { role: 'IN QUEUE', color: '#4DA8DA', icon: '⏳', description: `Position #${Number(queuePosition)}` };
     } else {
       return { role: 'INACTIVE', color: '#999999', icon: '⭕', description: 'Not active in this stream' };
     }
@@ -953,18 +954,18 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                 {rankInfo?.isFull && (
                   <text x="0" y={circleRadius-30} textAnchor="middle" fontSize="22" fill="#FFD700" fontWeight="bold" filter="url(#glowLux)">Full</text>
                 )}
-                <title>{`Rank ${displayedRank}\nDonatur: ${rankInfo?.donors?.length || 0}\nAntrean: ${rankInfo?.waitingQueue?.length || 0}\nDana: ${rankInfo?.totalFunds ? ethers.formatEther(rankInfo.totalFunds) : 0} opBNB`}</title>
+                <title>{`Rank ${displayedRank}\nDonors: ${rankInfo?.donors?.length || 0}\nQueue: ${rankInfo?.waitingQueue?.length || 0}\nFunds: ${rankInfo?.totalFunds ? ethers.formatEther(rankInfo.totalFunds) : 0} opBNB`}</title>
                 <text x="0" y="-40" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#102E50' : '#F5C45E'} fontSize="36" fontWeight="bold">
                   Rank {displayedRank}
                 </text>
                 {/* Background untuk text agar lebih readable */}
                 <rect x="-80" y="-18" width="160" height="40" fill="#102E50" opacity="0.7" rx="8" ry="8" />
                 <text x="0" y="10" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#FFD700' : '#F5C45E'} fontSize="28" fontWeight="bold" fontFamily="monospace">
-                  {rankInfo?.rankDonationValue ? `${ethers.formatEther(rankInfo.rankDonationValue)} opBNB` : 'Memuat...'}
+                  {rankInfo?.rankDonationValue ? `${ethers.formatEther(rankInfo.rankDonationValue)} opBNB` : 'Loading...'}
                 </text>
                 {maxDonorsPerRank !== undefined && (
                   <text x="0" y="60" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#102E50' : '#F5C45E'} fontSize="20">
-                    {rankInfo?.donors ? `${rankInfo.donors.length}/${Number(maxDonorsPerRank)} Slots` : 'Memuat...'}
+                    {rankInfo?.donors ? `${rankInfo.donors.length}/${Number(maxDonorsPerRank)} Slots` : 'Loading...'}
                   </text>
                 )}
                 {slotPositions.map((pos, idx) => {
@@ -988,7 +989,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                     </g>
                   );
                 })}
-                {rankInfo && rankInfo.waitingQueue.length > 0 && (
+                {rankInfo && rankInfo.waitingQueue.length > 0 && rankInfo.waitingQueue.length < 6 && (
                   <g transform={`translate(${circleRadius + 60}, 0)`}>
                     <text x="0" y="-40" fill="#4DA8DA" fontSize="18">Queue:</text>
                     {rankInfo.waitingQueue.map((user, idx) => (
@@ -1000,6 +1001,11 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                       </g>
                     ))}
                   </g>
+                )}
+                {rankInfo && rankInfo.waitingQueue.length >= 6 && (
+                  <text x={circleRadius + 60} y="0" textAnchor="middle" fill="#FFD700" fontSize="14" fontWeight="bold">
+                    {rankInfo.waitingQueue.length} in Queue
+                  </text>
                 )}
                 {/* Tambahkan slot penerima di tengah lingkaran rank */}
                 {lastReceiver && (
