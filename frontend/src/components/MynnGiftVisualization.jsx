@@ -267,6 +267,14 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     enabled: !!userAddress,
   });
 
+  // User's NobleGift Rank (needed for stream visualization)
+  const { data: nobleGiftRank, refetch: refetchNobleGiftRank } = useReadContract({
+    ...mynngiftConfig,
+    functionName: streamType === 'streamA' ? 'getUserRank_StreamA' : 'getUserRank_StreamB',
+    args: [userAddress],
+    enabled: !!userAddress,
+  });
+
   // Ambil nilai MAX_DONORS_PER_RANK dari kontrak
   const { data: maxDonorsPerRank } = useReadContract({
     ...mynngiftConfig,
