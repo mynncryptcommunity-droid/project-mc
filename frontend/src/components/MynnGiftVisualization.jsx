@@ -249,6 +249,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     args: [userAddress],
     enabled: !!userAddress,
     watch: true,  // ✅ Real-time update
+    gcTime: 0,  // Disable caching for real-time updates
   });
 
   const { data: isReceiverStream, refetch: refetchIsReceiver } = useReadContract({
@@ -257,6 +258,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     args: [userAddress],
     enabled: !!userAddress,
     watch: true,  // ✅ Real-time update
+    gcTime: 0,  // Disable caching for real-time updates
   });
 
   // Debug: Log status changes
@@ -276,6 +278,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     args: [userAddress],
     enabled: !!userAddress,
     watch: true,  // ✅ Real-time update for status changes
+    gcTime: 0,  // Disable caching for real-time updates
   });
 
   // User's NobleGift Rank (needed for stream visualization)
@@ -285,6 +288,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     args: [userAddress],
     enabled: !!userAddress,
     watch: true,  // ✅ Real-time update for rank changes
+    gcTime: 0,  // Disable caching for real-time updates
   });
 
   // Ambil nilai MAX_DONORS_PER_RANK dari kontrak
@@ -317,6 +321,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     args: [nobleGiftRank, userAddress],
     enabled: !!userAddress && !!nobleGiftRank,
     watch: true,  // ✅ Real-time update for queue position
+    gcTime: 0,  // Disable caching for real-time updates
   });
 
   // Ambil data untuk setiap Rank
