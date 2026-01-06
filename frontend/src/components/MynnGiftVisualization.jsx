@@ -273,6 +273,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     functionName: streamType === 'streamA' ? 'getUserRank_StreamA' : 'getUserRank_StreamB',
     args: [userAddress],
     enabled: !!userAddress,
+    watch: true,  // ✅ Real-time update for rank changes
   });
 
   // Ambil nilai MAX_DONORS_PER_RANK dari kontrak
@@ -299,11 +300,12 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
   });
 
   // Tambahkan hook untuk mengambil posisi antrean user
-  const { data: queuePosition } = useReadContract({
+  const { data: queuePosition, refetch: refetchQueuePosition } = useReadContract({
     ...mynngiftConfig,
     functionName: 'getWaitingQueuePosition',
     args: [nobleGiftRank, userAddress],
     enabled: !!userAddress && !!nobleGiftRank,
+    watch: true,  // ✅ Real-time update for queue position
   });
 
   // Ambil data untuk setiap Rank
@@ -482,6 +484,12 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           await rankInfo.refetchCurrentRankStatus();
           await rankInfo.refetchWaitingQueue();
         }
+        
+        // CRITICAL: Refetch user's own status and queue position
+        await refetchIsDonor();
+        await refetchIsReceiver();
+        await refetchQueuePosition();
+        await refetchNobleGiftRank();
         
         // Also refetch next rank's data to show it's ready for new donors
         const nextRank = Number(eventRank) + 1;
@@ -1012,14 +1020,23 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                         <text x="0" y="35" textAnchor="middle" fill="#F5C45E" fontSize="14">
                           {`${user.slice(0, 4)}...`}
                         </text>
+                        {userAddress && user.toLowerCase() === userAddress.toLowerCase() && (
+                          <circle cx="0" cy="0" r="20" fill="none" stroke="#FFD700" strokeWidth="2" />
+                        )}
                       </g>
                     ))}
                   </g>
                 )}
                 {rankInfo && rankInfo.waitingQueue.length >= 6 && (
-                  <text x={circleRadius + 60} y="0" textAnchor="middle" fill="#FFD700" fontSize="14" fontWeight="bold">
-                    {rankInfo.waitingQueue.length} in Queue
-                  </text>
+                  <g transform={`translate(${circleRadius + 60}, 0)`}>
+                    <text x="0" y="-40" fill="#4DA8DA" fontSize="16">Queue:</text>
+                    <text x="0" y="5" textAnchor="middle" fill="#FFD700" fontSize="14" fontWeight="bold">
+                      {rankInfo.waitingQueue.length} waiting
+                    </text>
+                    <text x="0" y="25" textAnchor="middle" fill="#4DA8DA" fontSize="12">
+                      {queuePosition && Number(queuePosition) > 0 ? `You #${Number(queuePosition)}` : ''}
+                    </text>
+                  </g>
                 )}
                 {/* Tambahkan slot penerima di tengah lingkaran rank */}
                 {lastReceiver && (
