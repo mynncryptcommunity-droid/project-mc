@@ -261,16 +261,6 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     gcTime: 0,  // Disable caching for real-time updates
   });
 
-  // Debug: Log status changes
-  useEffect(() => {
-    console.log('📊 STATUS DEBUG:', {
-      isDonorStream,
-      isReceiverStream,
-      queuePosition: queuePosition ? Number(queuePosition) : null,
-      nobleGiftRank: nobleGiftRank ? Number(nobleGiftRank) : null,
-    });
-  }, [isDonorStream, isReceiverStream, queuePosition, nobleGiftRank]);
-
   // User's NobleGift Status
   const { data: nobleGiftStatus, refetch: refetchNobleGiftStatus } = useReadContract({
     ...mynngiftConfig,
@@ -323,6 +313,16 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     watch: true,  // ✅ Real-time update for queue position
     gcTime: 0,  // Disable caching for real-time updates
   });
+
+  // Debug: Log status changes (AFTER all hooks are defined)
+  useEffect(() => {
+    console.log('📊 STATUS DEBUG:', {
+      isDonorStream,
+      isReceiverStream,
+      queuePosition: queuePosition ? Number(queuePosition) : null,
+      nobleGiftRank: nobleGiftRank ? Number(nobleGiftRank) : null,
+    });
+  }, [isDonorStream, isReceiverStream, queuePosition, nobleGiftRank]);
 
   // Ambil data untuk setiap Rank
   const rankReads = Array.from({ length: 8 }, (_, i) => {
