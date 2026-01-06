@@ -242,23 +242,12 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
 
   // --- 1. Ambil Data Awal dan Real-time dari Kontrak --- //
 
-  // User's status as donor/receiver
-  const { data: isDonorStream, refetch: refetchIsDonor } = useReadContract({
+  // User's NobleGift Rank
+  const { data: nobleGiftRank, refetch: refetchNobleGiftRank } = useReadContract({
     ...mynngiftConfig,
-    functionName: streamType === 'streamA' ? 'isDonor_StreamA' : 'isDonor_StreamB',
+    functionName: 'getUserRank',
     args: [userAddress],
     enabled: !!userAddress,
-    watch: true,  // ✅ Real-time update
-    gcTime: 0,  // Disable caching for real-time updates
-  });
-
-  const { data: isReceiverStream, refetch: refetchIsReceiver } = useReadContract({
-    ...mynngiftConfig,
-    functionName: streamType === 'streamA' ? 'isReceiver_StreamA' : 'isReceiver_StreamB',
-    args: [userAddress],
-    enabled: !!userAddress,
-    watch: true,  // ✅ Real-time update
-    gcTime: 0,  // Disable caching for real-time updates
   });
 
   // User's NobleGift Status
@@ -267,18 +256,6 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     functionName: 'getUserStatus',
     args: [userAddress],
     enabled: !!userAddress,
-    watch: true,  // ✅ Real-time update for status changes
-    gcTime: 0,  // Disable caching for real-time updates
-  });
-
-  // User's NobleGift Rank (needed for stream visualization)
-  const { data: nobleGiftRank, refetch: refetchNobleGiftRank } = useReadContract({
-    ...mynngiftConfig,
-    functionName: streamType === 'streamA' ? 'getUserRank_StreamA' : 'getUserRank_StreamB',
-    args: [userAddress],
-    enabled: !!userAddress,
-    watch: true,  // ✅ Real-time update for rank changes
-    gcTime: 0,  // Disable caching for real-time updates
   });
 
   // Ambil nilai MAX_DONORS_PER_RANK dari kontrak
@@ -293,7 +270,6 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     ...mynngiftConfig,
     functionName: 'gasSubsidyPool',
     enabled: true,
-    watch: true,  // ✅ Watch for real-time updates
   });
 
   // Ambil nilai totalReceivers
@@ -301,28 +277,15 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     ...mynngiftConfig,
     functionName: 'totalReceivers',
     enabled: true,
-    watch: true,  // ✅ Watch for real-time updates
   });
 
   // Tambahkan hook untuk mengambil posisi antrean user
-  const { data: queuePosition, refetch: refetchQueuePosition } = useReadContract({
+  const { data: queuePosition } = useReadContract({
     ...mynngiftConfig,
     functionName: 'getWaitingQueuePosition',
     args: [nobleGiftRank, userAddress],
     enabled: !!userAddress && !!nobleGiftRank,
-    watch: true,  // ✅ Real-time update for queue position
-    gcTime: 0,  // Disable caching for real-time updates
   });
-
-  // Debug: Log status changes (AFTER all hooks are defined)
-  useEffect(() => {
-    console.log('📊 STATUS DEBUG:', {
-      isDonorStream,
-      isReceiverStream,
-      queuePosition: queuePosition ? Number(queuePosition) : null,
-      nobleGiftRank: nobleGiftRank ? Number(nobleGiftRank) : null,
-    });
-  }, [isDonorStream, isReceiverStream, queuePosition, nobleGiftRank]);
 
   // Ambil data untuk setiap Rank
   const rankReads = Array.from({ length: 8 }, (_, i) => {
@@ -489,48 +452,23 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     ...mynngiftConfig,
     eventName: 'RankCycleCompleted',
     onLogs(logs) {
-      // Use for...of instead of forEach to properly await async operations
-      (async () => {
-        for (const log of logs) {
-          const { rank: eventRank, cycleNumber: eventCycleNumber, donors: eventDonors } = log.args;
-          console.log(`RankCycleCompleted: Rank ${eventRank} completed cycle ${eventCycleNumber}`);
-          setIsProcessingCycle(prev => ({ ...prev, [Number(eventRank)]: true }));
+      logs.forEach(async log => {
+        const { rank: eventRank, cycleNumber: eventCycleNumber, donors: eventDonors } = log.args;
+        console.log(`RankCycleCompleted: Rank ${eventRank} completed cycle ${eventCycleNumber}`);
+        setIsProcessingCycle(prev => ({ ...prev, [Number(eventRank)]: true }));
 
-          const rankInfo = ranksData[Number(eventRank)];
-          if (rankInfo && rankInfo.refetchDonors && rankInfo.refetchCurrentRankStatus && rankInfo.refetchWaitingQueue) {
-            await rankInfo.refetchDonors();
-            await rankInfo.refetchCurrentRankStatus();
-            await rankInfo.refetchWaitingQueue();
-          }
-          
-          // CRITICAL: Refetch user's own status and queue position - MUST AWAIT
-          console.log('🔄 Refetching user status after rank cycle...');
-          await refetchIsDonor();
-          await refetchIsReceiver();
-          await refetchQueuePosition();
-          await refetchNobleGiftRank();
-          await refetchNobleGiftStatus();
-          console.log('✅ User status refetch complete');
-          
-          // Also refetch next rank's data to show it's ready for new donors
-          const nextRank = Number(eventRank) + 1;
-          if (nextRank <= 8) {
-            const nextRankInfo = ranksData[nextRank];
-            if (nextRankInfo && nextRankInfo.refetchDonors && nextRankInfo.refetchWaitingQueue) {
-              // Small delay to allow contract to fully process
-              await new Promise(resolve => setTimeout(resolve, 500));
-              await nextRankInfo.refetchDonors();
-              await nextRankInfo.refetchWaitingQueue();
-            }
-          }
-          
-          // Refetch gas subsidy pool when rank cycle completes
-          if (refetchGasSubsidyPool) {
-            await refetchGasSubsidyPool();
-          }
-          setAnimationQueue(prev => [...prev, { type: 'RANK_CYCLE_COMPLETE', rank: Number(eventRank), cycleNumber: Number(eventCycleNumber), donors: eventDonors }]);
+        const rankInfo = ranksData[Number(eventRank)];
+        if (rankInfo && rankInfo.refetchDonors && rankInfo.refetchCurrentRankStatus && rankInfo.refetchWaitingQueue) {
+          await rankInfo.refetchDonors();
+          await rankInfo.refetchCurrentRankStatus();
+          await rankInfo.refetchWaitingQueue();
         }
-      })();
+        // Refetch gas subsidy pool when rank cycle completes
+        if (refetchGasSubsidyPool) {
+          await refetchGasSubsidyPool();
+        }
+        setAnimationQueue(prev => [...prev, { type: 'RANK_CYCLE_COMPLETE', rank: Number(eventRank), cycleNumber: Number(eventCycleNumber), donors: eventDonors }]);
+      });
     },
   });
 
@@ -681,20 +619,6 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     return nobleGiftRankNames[rank] || 'N/A';
   }, []);
 
-  // Determine user role based on donor/receiver status
-  const getUserRoleStatus = useCallback(() => {
-    // Priority: Check queue position first
-    if (queuePosition && Number(queuePosition) > 0) {
-      return { role: 'IN QUEUE', color: '#4DA8DA', icon: '⏳', description: `Position #${Number(queuePosition)}` };
-    } else if (isReceiverStream) {
-      return { role: 'RECEIVER', color: '#00FF88', icon: '💚', description: 'Receiving funds' };
-    } else if (isDonorStream) {
-      return { role: 'DONOR', color: '#F5C45E', icon: '💛', description: 'Contributing to rank' };
-    } else {
-      return { role: 'INACTIVE', color: '#999999', icon: '⭕', description: 'Not active in this stream' };
-    }
-  }, [isDonorStream, isReceiverStream, queuePosition]);
-
   // Fungsi untuk translate status dari bahasa Indonesia ke Inggris
   const formatStatusDisplay = useCallback((status) => {
     if (!status) return 'Loading...';
@@ -744,21 +668,6 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           <div className="text-center sm:text-right">
             <p className="text-gray-400 text-sm mb-1">Queue</p>
             <p className="text-lg font-semibold text-[#FFD700]">{queuePosition && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'n/a'}</p>
-          </div>
-          <div className="text-center sm:text-right">
-            {(() => {
-              const roleStatus = getUserRoleStatus();
-              return (
-                <>
-                  <p className="text-gray-400 text-sm mb-1">Your Role</p>
-                  <div className="flex items-center justify-center sm:justify-end gap-2">
-                    <span style={{ color: roleStatus.color }} className="text-lg">{roleStatus.icon}</span>
-                    <p className="text-lg font-semibold" style={{ color: roleStatus.color }}>{roleStatus.role}</p>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">{roleStatus.description}</p>
-                </>
-              );
-            })()}
           </div>
         </div>
 
@@ -997,18 +906,18 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                 {rankInfo?.isFull && (
                   <text x="0" y={circleRadius-30} textAnchor="middle" fontSize="22" fill="#FFD700" fontWeight="bold" filter="url(#glowLux)">Full</text>
                 )}
-                <title>{`Rank ${displayedRank}\nDonors: ${rankInfo?.donors?.length || 0}\nQueue: ${rankInfo?.waitingQueue?.length || 0}\nFunds: ${rankInfo?.totalFunds ? ethers.formatEther(rankInfo.totalFunds) : 0} opBNB`}</title>
+                <title>{`Rank ${displayedRank}\nDonatur: ${rankInfo?.donors?.length || 0}\nAntrean: ${rankInfo?.waitingQueue?.length || 0}\nDana: ${rankInfo?.totalFunds ? ethers.formatEther(rankInfo.totalFunds) : 0} opBNB`}</title>
                 <text x="0" y="-40" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#102E50' : '#F5C45E'} fontSize="36" fontWeight="bold">
                   Rank {displayedRank}
                 </text>
                 {/* Background untuk text agar lebih readable */}
                 <rect x="-80" y="-18" width="160" height="40" fill="#102E50" opacity="0.7" rx="8" ry="8" />
                 <text x="0" y="10" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#FFD700' : '#F5C45E'} fontSize="28" fontWeight="bold" fontFamily="monospace">
-                  {rankInfo?.rankDonationValue ? `${ethers.formatEther(rankInfo.rankDonationValue)} opBNB` : 'Loading...'}
+                  {rankInfo?.rankDonationValue ? `${ethers.formatEther(rankInfo.rankDonationValue)} opBNB` : 'Memuat...'}
                 </text>
                 {maxDonorsPerRank !== undefined && (
                   <text x="0" y="60" textAnchor="middle" fill={isUserCurrentRank || isRankProcessing ? '#102E50' : '#F5C45E'} fontSize="20">
-                    {rankInfo?.donors ? `${rankInfo.donors.length}/${Number(maxDonorsPerRank)} Slots` : 'Loading...'}
+                    {rankInfo?.donors ? `${rankInfo.donors.length}/${Number(maxDonorsPerRank)} Slots` : 'Memuat...'}
                   </text>
                 )}
                 {slotPositions.map((pos, idx) => {
@@ -1032,7 +941,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                     </g>
                   );
                 })}
-                {rankInfo && rankInfo.waitingQueue.length > 0 && rankInfo.waitingQueue.length < 6 && (
+                {rankInfo && rankInfo.waitingQueue.length > 0 && (
                   <g transform={`translate(${circleRadius + 60}, 0)`}>
                     <text x="0" y="-40" fill="#4DA8DA" fontSize="18">Queue:</text>
                     {rankInfo.waitingQueue.map((user, idx) => (
@@ -1041,22 +950,8 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                         <text x="0" y="35" textAnchor="middle" fill="#F5C45E" fontSize="14">
                           {`${user.slice(0, 4)}...`}
                         </text>
-                        {userAddress && user.toLowerCase() === userAddress.toLowerCase() && (
-                          <circle cx="0" cy="0" r="20" fill="none" stroke="#FFD700" strokeWidth="2" />
-                        )}
                       </g>
                     ))}
-                  </g>
-                )}
-                {rankInfo && rankInfo.waitingQueue.length >= 6 && (
-                  <g transform={`translate(${circleRadius + 60}, 0)`}>
-                    <text x="0" y="-40" fill="#4DA8DA" fontSize="16">Queue:</text>
-                    <text x="0" y="5" textAnchor="middle" fill="#FFD700" fontSize="14" fontWeight="bold">
-                      {rankInfo.waitingQueue.length} waiting
-                    </text>
-                    <text x="0" y="25" textAnchor="middle" fill="#4DA8DA" fontSize="12">
-                      {queuePosition && Number(queuePosition) > 0 ? `You #${Number(queuePosition)}` : ''}
-                    </text>
                   </g>
                 )}
                 {/* Tambahkan slot penerima di tengah lingkaran rank */}
@@ -1203,8 +1098,8 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           <div className="space-y-2">
             <p className="text-sm font-semibold text-[#4DA8DA] mb-4">Queue Order (By User ID)</p>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {ranksData[Number(nobleGiftRank)].waitingQueue.map((queueUserAddress, index) => {
-                const isCurrentUser = queueUserAddress && queueUserAddress.toLowerCase() === (userAddress || '').toLowerCase();
+              {ranksData[Number(nobleGiftRank)].waitingQueue.map((userAddress, index) => {
+                const isCurrentUser = userAddress && userAddress.toLowerCase() === (userAddress || '').toLowerCase();
                 const position = index + 1;
                 return (
                   <div 
@@ -1224,7 +1119,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
                         </div>
                         <div>
                           <p className="text-xs opacity-75">User ID</p>
-                          <p className="font-mono font-semibold">{queueUserAddress.slice(0, 8)}...{queueUserAddress.slice(-6)}</p>
+                          <p className="font-mono font-semibold">{userAddress.slice(0, 8)}...{userAddress.slice(-6)}</p>
                         </div>
                       </div>
                       <div className="text-right">
