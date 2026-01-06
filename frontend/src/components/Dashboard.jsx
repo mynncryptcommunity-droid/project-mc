@@ -1460,6 +1460,12 @@ useEffect(() => {
           incomeType = IncomeType.ROYALTY;
           layer = 4; // Or appropriate layer for royalty
           break;
+        case 'royaltyclaimed': // When user claims their royalty
+          senderId = 'Royalty Pool'; // Source of claimed royalty
+          receiverId = event.args?.userId || currentUserId || '';
+          incomeType = IncomeType.ROYALTY;
+          layer = 4; // Royalty layer
+          break;
         default:
           // Handle other event types or fallbacks if needed
           senderId = event.args?.fromUser || event.args?.sender || '';
@@ -1531,6 +1537,9 @@ useEffect(() => {
         receiver = event.args?.userId || '';
       } else if (event.eventName === 'RoyaltyReward') {
         sender = 'System';
+        receiver = event.args?.userId || '';
+      } else if (event.eventName === 'RoyaltyClaimed') {
+        sender = 'Royalty Pool';
         receiver = event.args?.userId || '';
       } else {
         sender = event.fromUser || event.upline || event.from || 'System';
@@ -1748,6 +1757,23 @@ useEffect(() => {
         };
         contractInstance.on(royaltyRewardFilter, onRoyaltyReward);
 
+        // Handle RoyaltyClaimed events (when user claims their royalty)
+        const royaltyClaimedFilter = contractInstance.filters.RoyaltyClaimed();
+        const onRoyaltyClaimed = (claimedUserId, amount) => {
+          console.log('RoyaltyClaimed event detected:', { claimedUserId, amount });
+
+          if (claimedUserId !== userId) {
+            console.log('Skipping RoyaltyClaimed event for different user');
+            return;
+          }
+
+          processIncomeEvent({
+            eventName: 'RoyaltyClaimed',
+            args: { userId: claimedUserId, amount: amount}
+          }, IncomeType.ROYALTY, userId);
+        };
+        contractInstance.on(royaltyClaimedFilter, onRoyaltyClaimed);
+
         // Cleanup function for this specific instance
         return () => {
           try {
@@ -1756,6 +1782,7 @@ useEffect(() => {
             contractInstance.off('UplineDistribution', onUpline);
             contractInstance.off('SponsorDistribution', onSponsor);
             contractInstance.off('RoyaltyReward', onRoyaltyReward);
+            contractInstance.off('RoyaltyClaimed', onRoyaltyClaimed);
           } catch (_error) {
             console.error('Error cleaning up event listeners (inner):', _error);
           }
@@ -2361,6 +2388,9 @@ useEffect(() => {
                                   )}
                                   {income.incomeType === IncomeType.SPONSOR && (
                                     <span className="text-xs text-gray-400">Team Sponsor</span>
+                                  )}
+                                  {income.incomeType === IncomeType.ROYALTY && (
+                                    <span className="text-xs text-gray-400">Royalty Pool</span>
                                   )}
                                 </div>
                               </td>
