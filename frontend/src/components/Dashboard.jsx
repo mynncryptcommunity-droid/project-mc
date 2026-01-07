@@ -1869,15 +1869,28 @@ useEffect(() => {
       .reduce((sum, item) => sum + parseFloat(item.amount), 0)
   , [incomeHistory]);
 
+  // Calculate claimed royalty from income history (Type 4 = ROYALTY claim)
+  const claimedRoyalty = useMemo(() => {
+    if (!incomeHistory || !Array.isArray(incomeHistory)) return 0;
+    return incomeHistory
+      .filter(income => income.incomeType === IncomeType.ROYALTY)
+      .reduce((sum, income) => sum + parseFloat(income.amount || 0), 0);
+  }, [incomeHistory]);
+
   // Update calculateTotalIncome to use the same sources as the breakdown
   const calculateTotalIncome = useMemo(() => {
     // Use the same calculation as the breakdown: referral, sponsor, upline, royalty
     const referral = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[0])) : 0; // Use contract's referral income
     const upline = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[1])) : 0;
     const sponsor = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[2])) : 0; // Use contract's sponsor income
-    const royalty = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[4])) : 0;
-    return (referral + sponsor + upline + royalty).toFixed(4);
-  }, [incomeBreakdown]); // Dependencies changed
+    const pendingRoyalty = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[4])) : 0;
+    
+    // ✅ FIX: Include both claimed royalty (from history) and pending royalty
+    // This way totalIncome stays same after claim (claimed stays in history)
+    const totalRoyalty = claimedRoyalty + pendingRoyalty;
+    
+    return (referral + sponsor + upline + totalRoyalty).toFixed(4);
+  }, [incomeBreakdown, claimedRoyalty]); // Add claimedRoyalty to dependencies
 
   // Fetch MynnGift income breakdown for all ranks
   const { data: mynngiftIncomeBreakdown } = useReadContract({
