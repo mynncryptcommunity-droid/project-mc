@@ -1133,12 +1133,13 @@ useEffect(() => {
           if (!income) return null;
           
           console.log(`📝 Processing income entry ${idx}:`, income);
+          console.log(`   Raw values: layer=${income.layer}, id=${income.id}, amount=${income.amount}, time=${income.time}`);
           
           const layer = Number(income.layer ?? income.level ?? income.userLevel ?? 0);
           const senderId = income.id?.toString() || '';
           const receiverId = income.receiverId?.toString() || income.to?.toString() || userId?.toString() || '';
           
-          console.log(`  Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
+          console.log(`   Parsed: Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
           
           // FILTER: Exclude MynnGift donations (levels 2-9 only, NOT royalty/type 4)
           // MynnGift donations are recorded with layer = user's upgrade level (2-9)
@@ -1185,6 +1186,12 @@ useEffect(() => {
             timestamp: Number(income.timestamp || income.time || 0) * 1000, // Convert to JS timestamp (milliseconds)
             layer: Number(income.layer ?? income.level ?? income.userLevel ?? 0)
           };
+          
+          // Special logging for royalty and large amounts
+          if (layer === 4 || parseFloat(newIncomeObj.amount) >= 0.0001) {
+            console.log(`   💰 Amount ${newIncomeObj.amount} opBNB, Layer ${layer}, Type: ${newIncomeObj.incomeType}`);
+            console.log(`   ✅ Final: ${newIncomeObj.incomeType === 4 ? 'ROYALTY' : 'OTHER'}`);
+          }
           
           console.log('✅ Processed income entry:', newIncomeObj);
           return newIncomeObj;
