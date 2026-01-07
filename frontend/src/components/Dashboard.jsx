@@ -2369,42 +2369,46 @@ useEffect(() => {
           {showDebugPanel ? '❌ Hide' : '🔍'} Debug Info
         </button>
         {showDebugPanel && (
-          <div className="mt-3 p-4 bg-[#102E50] border border-[#4DA8DA]/50 rounded text-xs font-mono text-[#4DA8DA] w-full" style={{maxHeight: '600px', overflowY: 'auto'}}>
-            <div>📊 <strong>Income History Debug Info</strong></div>
-            <div>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-            <div>✓ userId: {userId || 'NOT SET'}</div>
-            <div>✓ Loading: {incomeHistoryLoading ? 'YES' : 'NO'}</div>
-            <div>✓ Error: {incomeHistoryError ? incomeHistoryError.message : 'NONE'}</div>
-            <div>✓ incomeHistoryRaw: {incomeHistoryRaw ? (Array.isArray(incomeHistoryRaw) ? `Array(${incomeHistoryRaw.length})` : typeof incomeHistoryRaw) : 'undefined'}</div>
-            <div>✓ Processed History: {incomeHistory ? `${incomeHistory.length} items` : 'undefined'}</div>
-            <div className="mt-2">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-            <div><strong>Raw Contract Data (incomeHistoryRaw):</strong></div>
-            {incomeHistoryRaw && Array.isArray(incomeHistoryRaw) ? (
-              <div>
-                {incomeHistoryRaw.map((entry, idx) => {
-                  const amountInBnb = entry.amount ? (Number(entry.amount) / 1e18).toFixed(6) : 'undefined';
-                  const layerNum = entry.layer ? Number(entry.layer) : undefined;
-                  let layerName = '';
-                  if (layerNum === 0) layerName = ' (Referral)';
-                  else if (layerNum === 1) layerName = ' (Sponsor)';
-                  else if (layerNum === 4) layerName = ' (Royalty Claim!)';
-                  else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
-                  else if (layerNum >= 10) layerName = ' (Upline)';
-                  
-                  return (
-                    <div key={idx} className="mt-2 p-2 bg-[#0A1E2E] rounded border border-[#4DA8DA]/20">
-                      <div><strong>Entry {idx}:</strong></div>
-                      <div>  layer: {layerNum}{layerName}</div>
-                      <div>  amount: {amountInBnb} opBNB</div>
-                      <div>  id: {entry.id || 'undefined'}</div>
-                      <div>  time: {entry.time ? new Date(Number(entry.time) * 1000).toLocaleString() : 'undefined'}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-red-400">No array data</div>
-            )}
+          <div className="mt-3 bg-[#102E50] border border-[#4DA8DA]/50 rounded text-xs font-mono text-[#4DA8DA] w-full">
+            <div className="p-4">
+              <div>📊 <strong>Income History Debug Info</strong></div>
+              <div>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+              <div>✓ userId: {userId || 'NOT SET'}</div>
+              <div>✓ Loading: {incomeHistoryLoading ? 'YES' : 'NO'}</div>
+              <div>✓ Error: {incomeHistoryError ? incomeHistoryError.message : 'NONE'}</div>
+              <div>✓ incomeHistoryRaw: {incomeHistoryRaw ? (Array.isArray(incomeHistoryRaw) ? `Array(${incomeHistoryRaw.length})` : typeof incomeHistoryRaw) : 'undefined'}</div>
+              <div>✓ Processed History: {incomeHistory ? `${incomeHistory.length} items` : 'undefined'}</div>
+              <div className="mt-2">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+              <div><strong>Raw Contract Data (incomeHistoryRaw):</strong></div>
+            </div>
+            <div style={{maxHeight: '600px', overflowY: 'auto', paddingLeft: '1rem', paddingRight: '1rem', paddingBottom: '1rem'}}>
+              {incomeHistoryRaw && Array.isArray(incomeHistoryRaw) ? (
+                <div>
+                  {incomeHistoryRaw.map((entry, idx) => {
+                    const amountInBnb = entry.amount ? (Number(entry.amount) / 1e18).toFixed(6) : 'undefined';
+                    const layerNum = entry.layer ? Number(entry.layer) : undefined;
+                    let layerName = '';
+                    if (layerNum === 0) layerName = ' (Referral)';
+                    else if (layerNum === 1) layerName = ' (Sponsor)';
+                    else if (layerNum === 4) layerName = ' (Royalty Claim!)';
+                    else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
+                    else if (layerNum >= 10) layerName = ' (Upline)';
+                    
+                    return (
+                      <div key={idx} className="mt-2 p-2 bg-[#0A1E2E] rounded border border-[#4DA8DA]/20">
+                        <div><strong>Entry {idx}:</strong></div>
+                        <div>  layer: {layerNum}{layerName}</div>
+                        <div>  amount: {amountInBnb} opBNB</div>
+                        <div>  id: {entry.id || 'undefined'}</div>
+                        <div>  time: {entry.time ? new Date(Number(entry.time) * 1000).toLocaleString() : 'undefined'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-red-400">No array data</div>
+              )}
+            </div>
           </div>
         )}
       </div>
