@@ -1153,11 +1153,11 @@ useEffect(() => {
           
           console.log(`   Parsed: Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
           
-          // FILTER: Exclude MynnGift donations (levels 2-9 only, NOT royalty/type 4)
+          // FILTER: Exclude MynnGift donations (levels 2-9 only)
           // MynnGift donations are recorded with layer = user's upgrade level (2-9)
           // and senderId === receiverId (self-referential)
-          // BUT layer 4 is royalty claim, which is self-referential but should NOT be filtered!
-          if (layer >= 2 && layer <= 9 && layer !== 4 && senderId === receiverId) {
+          // Layer 11 is royalty claim (now separate from MynnGift Layer 4)
+          if (layer >= 2 && layer <= 9 && senderId === receiverId) {
             console.log(`  ✅ Filtering out MynnGift donation (level ${layer}, self-referential)`);
             return null; // Skip MynnGift entries from income history
           }
@@ -1172,9 +1172,9 @@ useEffect(() => {
                 console.log(`  → Mapped to SPONSOR`);
                 return IncomeType.SPONSOR;
               }
-              if (lyr === 4) {
+              if (lyr === 11) {
                 console.log(`  → Mapped to ROYALTY ✅`);
-                return IncomeType.ROYALTY;  // ✅ New: Type 4 = Royalty (from claimRoyalty)
+                return IncomeType.ROYALTY;  // ✅ Layer 11 = Royalty (from claimRoyalty)
               }
               if (lyr >= 10) {
                 console.log(`  → Mapped to UPLINE`);
@@ -2390,9 +2390,9 @@ useEffect(() => {
                     let layerName = '';
                     if (layerNum === 0) layerName = ' (Referral)';
                     else if (layerNum === 1) layerName = ' (Sponsor)';
-                    else if (layerNum === 4) layerName = ' (Royalty Claim!)';
-                    else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
-                    else if (layerNum >= 10) layerName = ' (Upline)';
+else if (layerNum === 11) layerName = ' (Royalty Claim!)';
+                  else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
+                  else if (layerNum >= 10 && layerNum < 11) layerName = ' (Upline)';
                     
                     return (
                       <div key={idx} className="mt-2 p-2 bg-[#0A1E2E] rounded border border-[#4DA8DA]/20">
