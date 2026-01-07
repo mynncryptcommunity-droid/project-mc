@@ -1126,29 +1126,48 @@ useEffect(() => {
 
   // Process income history data with enhanced error handling and real-time updates
   useEffect(() => {
+    console.log('📊 Income History Raw Data:', incomeHistoryRaw);
     if (incomeHistoryRaw && Array.isArray(incomeHistoryRaw)) {
       try {
-        const processedHistory = incomeHistoryRaw.map(income => {
+        const processedHistory = incomeHistoryRaw.map((income, idx) => {
           if (!income) return null;
+          
+          console.log(`📝 Processing income entry ${idx}:`, income);
           
           const layer = Number(income.layer ?? income.level ?? income.userLevel ?? 0);
           const senderId = income.id?.toString() || '';
           const receiverId = income.receiverId?.toString() || income.to?.toString() || userId?.toString() || '';
           
+          console.log(`  Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
+          
           // FILTER: Exclude MynnGift donations
           // MynnGift donations are recorded with layer = user's upgrade level (2-9)
           // and senderId === receiverId (self-referential)
           if (layer >= 2 && layer <= 9 && senderId === receiverId) {
+            console.log(`  ✅ Filtering out MynnGift donation (self-referential)`);
             return null; // Skip MynnGift entries from income history
           }
           
           // Determine income type based on layer
           const incomeType = ((lyr) => {
-              if (lyr === 0) return IncomeType.REFERRAL;
-              if (lyr === 1) return IncomeType.SPONSOR;
-              if (lyr === 4) return IncomeType.ROYALTY;  // ✅ New: Type 4 = Royalty (from claimRoyalty)
-              if (lyr >= 10) return IncomeType.UPLINE;
+              if (lyr === 0) {
+                console.log(`  → Mapped to REFERRAL`);
+                return IncomeType.REFERRAL;
+              }
+              if (lyr === 1) {
+                console.log(`  → Mapped to SPONSOR`);
+                return IncomeType.SPONSOR;
+              }
+              if (lyr === 4) {
+                console.log(`  → Mapped to ROYALTY ✅`);
+                return IncomeType.ROYALTY;  // ✅ New: Type 4 = Royalty (from claimRoyalty)
+              }
+              if (lyr >= 10) {
+                console.log(`  → Mapped to UPLINE`);
+                return IncomeType.UPLINE;
+              }
               // Fallback for types not explicitly mapped
+              console.log(`  → Mapped to REFERRAL (fallback)`);
               return IncomeType.REFERRAL; 
           })(layer);
 
@@ -1166,7 +1185,7 @@ useEffect(() => {
             layer: Number(income.layer ?? income.level ?? income.userLevel ?? 0)
           };
           
-          console.log('Processed income entry:', newIncomeObj);
+          console.log('✅ Processed income entry:', newIncomeObj);
           return newIncomeObj;
         }).filter(Boolean); // Remove null entries
         
@@ -1264,22 +1283,31 @@ useEffect(() => {
   // ✅ Auto-refetch when claim royalty is confirmed
   useEffect(() => {
     if (isConfirmedClaimRoyalty) {
-      console.log('✅ Claim Royalty transaction confirmed, refetching user data...');
+      console.log('✅ Claim Royalty transaction confirmed, waiting for block state update...');
       
-      // ✅ Invalidate all contract query caches to force fresh reads
-      queryClient.invalidateQueries({ queryKey: ['readContract'] });
+      // ✅ Add delay to allow blockchain state to be fully updated
+      // Some RPCs may need a small delay for data consistency
+      const delayMs = 1500; // 1.5 seconds
+      const timeoutId = setTimeout(() => {
+        console.log('✅ Now refetching user data after state update...');
+        
+        // ✅ Invalidate all contract query caches to force fresh reads
+        queryClient.invalidateQueries({ queryKey: ['readContract'] });
+        
+        // ✅ Then refetch specific data
+        refetchUserInfo().then(() => {
+          console.log('✅ User info refetched');
+        }).catch(err => console.error('Error refetching user info:', err));
+        refetchUserId().then(() => {
+          console.log('✅ User ID refetched');
+        }).catch(err => console.error('Error refetching user ID:', err));
+        // ✅ Also refetch income history to show new royalty in transaction list
+        refetchIncomeHistory().then(() => {
+          console.log('✅ Income history refetched - royalty claim should now appear');
+        }).catch(err => console.error('Error refetching income history:', err));
+      }, delayMs);
       
-      // ✅ Then refetch specific data
-      refetchUserInfo().then(() => {
-        console.log('✅ User info refetched');
-      }).catch(err => console.error('Error refetching user info:', err));
-      refetchUserId().then(() => {
-        console.log('✅ User ID refetched');
-      }).catch(err => console.error('Error refetching user ID:', err));
-      // ✅ Also refetch income history to show new royalty in transaction list
-      refetchIncomeHistory().then(() => {
-        console.log('✅ Income history refetched');
-      }).catch(err => console.error('Error refetching income history:', err));
+      return () => clearTimeout(timeoutId);
     }
   }, [isConfirmedClaimRoyalty, refetchUserInfo, refetchUserId, refetchIncomeHistory, queryClient]);
 
