@@ -2354,9 +2354,50 @@ useEffect(() => {
     setCurrentPage(pageNumber);
   }, []);
 
+  // DEBUG PANEL - Visual Debug Info
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+
   // Income History Table Component
   const IncomeHistoryTable = () => (
     <div className="bg-[#1A3A6A] w-full max-w-full p-3 sm:p-6 rounded-lg shadow-lg">
+      {/* DEBUG PANEL */}
+      <div className="mb-4">
+        <button 
+          onClick={() => setShowDebugPanel(!showDebugPanel)}
+          className="text-xs px-3 py-1 bg-[#102E50] text-[#4DA8DA] rounded border border-[#4DA8DA]/30 hover:bg-[#4DA8DA]/20"
+        >
+          {showDebugPanel ? '❌ Hide' : '🔍'} Debug Info
+        </button>
+        {showDebugPanel && (
+          <div className="mt-3 p-4 bg-[#102E50] border border-[#4DA8DA]/50 rounded text-xs font-mono text-[#4DA8DA] max-h-96 overflow-y-auto">
+            <div>📊 <strong>Income History Debug Info</strong></div>
+            <div>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+            <div>✓ userId: {userId || 'NOT SET'}</div>
+            <div>✓ Loading: {incomeHistoryLoading ? 'YES' : 'NO'}</div>
+            <div>✓ Error: {incomeHistoryError ? incomeHistoryError.message : 'NONE'}</div>
+            <div>✓ incomeHistoryRaw: {incomeHistoryRaw ? (Array.isArray(incomeHistoryRaw) ? `Array(${incomeHistoryRaw.length})` : typeof incomeHistoryRaw) : 'undefined'}</div>
+            <div>✓ Processed History: {incomeHistory ? `${incomeHistory.length} items` : 'undefined'}</div>
+            <div className="mt-2">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+            <div><strong>Raw Contract Data (incomeHistoryRaw):</strong></div>
+            {incomeHistoryRaw && Array.isArray(incomeHistoryRaw) ? (
+              <div>
+                {incomeHistoryRaw.map((entry, idx) => (
+                  <div key={idx} className="mt-1 p-2 bg-[#0A1E2E] rounded border border-[#4DA8DA]/20">
+                    <div>Entry {idx}:</div>
+                    <div>  layer: {entry.layer ? Number(entry.layer).toString() : 'undefined'}</div>
+                    <div>  amount: {entry.amount ? (Number(entry.amount) / 1e18).toFixed(6) : 'undefined'} opBNB</div>
+                    <div>  id: {entry.id || 'undefined'}</div>
+                    <div>  time: {entry.time ? Number(entry.time) : 'undefined'}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-red-400">No array data</div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mb-4">
         <h3 className="text-xl font-semibold text-[#F5C45E]">Income History</h3>
         <select 
