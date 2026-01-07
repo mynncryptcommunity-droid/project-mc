@@ -1140,11 +1140,12 @@ useEffect(() => {
           
           console.log(`  Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
           
-          // FILTER: Exclude MynnGift donations
+          // FILTER: Exclude MynnGift donations (levels 2-9 only, NOT royalty/type 4)
           // MynnGift donations are recorded with layer = user's upgrade level (2-9)
           // and senderId === receiverId (self-referential)
-          if (layer >= 2 && layer <= 9 && senderId === receiverId) {
-            console.log(`  ✅ Filtering out MynnGift donation (self-referential)`);
+          // BUT layer 4 is royalty claim, which is self-referential but should NOT be filtered!
+          if (layer >= 2 && layer <= 9 && layer !== 4 && senderId === receiverId) {
+            console.log(`  ✅ Filtering out MynnGift donation (level ${layer}, self-referential)`);
             return null; // Skip MynnGift entries from income history
           }
           
