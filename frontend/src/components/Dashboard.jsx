@@ -1153,17 +1153,27 @@ useEffect(() => {
           
           console.log(`   Parsed: Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
           
-          // FILTER: Exclude MynnGift donations (levels 2-9 only)
-          // MynnGift donations are recorded with layer = user's upgrade level (2-9)
-          // and senderId === receiverId (self-referential)
-          // Layer 11 is royalty claim (now separate from MynnGift Layer 4)
-          if (layer >= 2 && layer <= 9 && senderId === receiverId) {
-            console.log(`  ✅ Filtering out MynnGift donation (level ${layer}, self-referential)`);
+          // FILTER: Exclude MynnGift donations (levels 2-9 only, self-referential)
+          // MynnGift donations are self-referential purchases at specific ranks:
+          // Rank values: 0.0081, 0.02187, 0.059049, 0.1594323, 0.43046721, 1.162261467, 3.138105961, 8.472886094
+          // Royalty claims are also layer 4 but with much smaller amounts (< 0.1 ether typically)
+          
+          const amountInEther = Number(income.amount ?? 0) / 1e18;
+          const MIN_MYNNGIFT_DONATION = 0.0081; // Rank 1 minimum for MynnGift
+          
+          if (layer >= 2 && layer <= 9 && senderId === receiverId && amountInEther >= MIN_MYNNGIFT_DONATION) {
+            console.log(`  ✅ Filtering out MynnGift donation (level ${layer}, self-referential, amount ${amountInEther})`);
             return null; // Skip MynnGift entries from income history
           }
           
-          // Determine income type based on layer
-          const incomeType = ((lyr) => {
+          // Special handling for layer 4: if small amount, it's likely a royalty claim not MynnGift
+          if (layer === 4 && senderId === receiverId && amountInEther < MIN_MYNNGIFT_DONATION) {
+            console.log(`  💰 Layer 4 with small amount ${amountInEther} detected - treating as ROYALTY`);
+            // Will be mapped to ROYALTY below
+          }
+          
+          // Determine income type based on layer and amount
+          const incomeType = ((lyr, amt) => {
               if (lyr === 0) {
                 console.log(`  → Mapped to REFERRAL`);
                 return IncomeType.REFERRAL;
@@ -1172,18 +1182,27 @@ useEffect(() => {
                 console.log(`  → Mapped to SPONSOR`);
                 return IncomeType.SPONSOR;
               }
+              // Layer 4: Can be MynnGift Rank 5 or Royalty Claim
+              // Distinguish by amount: royalty claims are small, MynnGift Rank 5 is 0.1594323+
+              if (lyr === 4) {
+                const amountEther = amt / 1e18;
+                if (amountEther < 0.1) { // Likely royalty claim
+                  console.log(`  → Mapped to ROYALTY (small amount ${amountEther})`);
+                  return IncomeType.ROYALTY;
+                }
+              }
               if (lyr === 11) {
                 console.log(`  → Mapped to ROYALTY ✅`);
                 return IncomeType.ROYALTY;  // ✅ Layer 11 = Royalty (from claimRoyalty)
               }
-              if (lyr >= 10) {
+              if (lyr >= 10 && lyr < 11) {
                 console.log(`  → Mapped to UPLINE`);
                 return IncomeType.UPLINE;
               }
               // Fallback for types not explicitly mapped
               console.log(`  → Mapped to REFERRAL (fallback)`);
               return IncomeType.REFERRAL; 
-          })(layer);
+          })(layer, Number(income.amount ?? 0));
 
           const senderIdFromContract = income.id?.toString() || '';
           // Ambil receiverId dari data income, jangan selalu userId dashboard
@@ -2387,12 +2406,16 @@ useEffect(() => {
                   {incomeHistoryRaw.map((entry, idx) => {
                     const amountInBnb = entry.amount ? (Number(entry.amount) / 1e18).toFixed(6) : 'undefined';
                     const layerNum = entry.layer ? Number(entry.layer) : undefined;
+                    const amountInEther = Number(entry.amount ?? 0) / 1e18;
                     let layerName = '';
                     if (layerNum === 0) layerName = ' (Referral)';
                     else if (layerNum === 1) layerName = ' (Sponsor)';
-else if (layerNum === 11) layerName = ' (Royalty Claim!)';
-                  else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
-                  else if (layerNum >= 10 && layerNum < 11) layerName = ' (Upline)';
+                    else if (layerNum === 4 && amountInEther < 0.1) layerName = ' (Royalty Claim!)';
+                    else if (layerNum === 4) layerName = ' (MynnGift Level 4)';
+                    else if (layerNum === 11) layerName = ' (Royalty Claim!)';
+                    else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
+                    else if (layerNum >= 10 && layerNum < 11) layerName = ' (Upline)';
+                    else if (layerNum === undefined) layerName = ' (Referral - no layer)';
                     
                     return (
                       <div key={idx} className="mt-2 p-2 bg-[#0A1E2E] rounded border border-[#4DA8DA]/20">
