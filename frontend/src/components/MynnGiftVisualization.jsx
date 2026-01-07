@@ -290,12 +290,8 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
   // Ambil data untuk setiap Rank
   const rankReads = Array.from({ length: 8 }, (_, i) => {
     const rank = i + 1;
-    const { data: currentDonors, refetch: refetchCurrentDonors } = useReadContract({
-      ...mynngiftConfig,
-      functionName: 'getRankDonorsFormattedByStream',  // ← CHANGED: Use current donors, not history
-      args: [rank, streamEnum],
-      enabled: true,
-    });
+    // NOTE: We no longer need separate call to getRankDonorHistory
+    // Current donors will be extracted from getCurrentRankStatus return value
     const { data: waitingQueue, refetch: refetchWaitingQueue } = useReadContract({
       ...mynngiftConfig,
       functionName: 'getRankWaitingQueueByStream',
@@ -329,16 +325,14 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
 
     return {
       rank,
-      currentDonors: currentDonors || [],
-      waitingQueue: waitingQueue || [],
       currentRankStatus: currentRankStatus,
+      waitingQueue: waitingQueue || [],
       queueStatus: queueStatus,
       // Apply stream-specific multiplier: Stream B is 0.0936/0.0081 = ~11.56x Stream A
       rankDonationValue: rankDonationValue && streamEnum === 1 ? (BigInt(rankDonationValue) * 93600000000000000n / 8100000000000000n) : rankDonationValue,
       currentRankCycle: currentRankCycle,
-      refetchCurrentDonors,
-      refetchWaitingQueue,
       refetchCurrentRankStatus,
+      refetchWaitingQueue,
       refetchQueueStatus,
       refetchRankDonationValue,
       refetchCurrentRankCycle,
@@ -348,9 +342,11 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
   useEffect(() => {
     const newRanksData = {};
     rankReads.forEach(data => {
-      const isFull = maxDonorsPerRank !== undefined && data.currentDonors.length === Number(maxDonorsPerRank);
+      // Extract current donors from getCurrentRankStatus return value [0]
+      const currentDonors = data.currentRankStatus ? (data.currentRankStatus[0] || []) : [];
+      const isFull = maxDonorsPerRank !== undefined && currentDonors.length === Number(maxDonorsPerRank);
       newRanksData[data.rank] = {
-        donors: data.currentDonors,
+        donors: currentDonors,  // ← Now from getCurrentRankStatus[0] (current donors, not history!)
         waitingQueue: data.waitingQueue,
         totalFunds: data.currentRankStatus ? data.currentRankStatus[1] : BigInt(0),
         targetFunds: data.currentRankStatus ? data.currentRankStatus[2] : BigInt(0),
@@ -360,7 +356,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         rankDonationValue: data.rankDonationValue,
         currentRankCycle: data.currentRankCycle,
         isFull: isFull,
-        refetchDonors: data.refetchCurrentDonors,
+        refetchDonors: data.refetchCurrentRankStatus,  // ← Refetch getCurrentRankStatus instead
         refetchWaitingQueue: data.refetchWaitingQueue,
         refetchCurrentRankStatus: data.refetchCurrentRankStatus,
         refetchQueueStatus: data.refetchQueueStatus,
@@ -380,7 +376,7 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         console.log(`Last Receiver for Rank ${index + 1}:`, history[history.length - 1]);
       }
     });
-  }, [nobleGiftRank, maxDonorsPerRank, ...rankReads.flatMap(r => [r.currentDonors, r.waitingQueue, r.currentRankStatus, r.queueStatus, r.rankDonationValue, r.currentRankCycle]), ...receiverHistories]);
+  }, [nobleGiftRank, maxDonorsPerRank, ...rankReads.flatMap(r => [r.waitingQueue, r.currentRankStatus, r.queueStatus, r.rankDonationValue, r.currentRankCycle]), ...receiverHistories]);
 
   // --- 2. Dengarkan Event Real-time untuk Animasi --- //
 
