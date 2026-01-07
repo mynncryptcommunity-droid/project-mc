@@ -1153,27 +1153,22 @@ useEffect(() => {
           
           console.log(`   Parsed: Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
           
-          // FILTER: Exclude MynnGift donations (levels 2-9 only, self-referential)
-          // MynnGift donations are self-referential purchases at specific ranks:
-          // Rank values: 0.0081, 0.02187, 0.059049, 0.1594323, 0.43046721, 1.162261467, 3.138105961, 8.472886094
-          // Royalty claims are also layer 4 but with much smaller amounts (< 0.1 ether typically)
-          
-          const amountInEther = Number(income.amount ?? 0) / 1e18;
-          const MIN_MYNNGIFT_DONATION = 0.0081; // Rank 1 minimum for MynnGift
-          
-          if (layer >= 2 && layer <= 9 && senderId === receiverId && amountInEther >= MIN_MYNNGIFT_DONATION) {
-            console.log(`  ✅ Filtering out MynnGift donation (level ${layer}, self-referential, amount ${amountInEther})`);
-            return null; // Skip MynnGift entries from income history
+          // FILTER: Exclude MynnGift deposits (layers 4 and 8 = pengeluaran, bukan income)
+          // MynnGift deposits are recorded with layer 4 (Level 4 upgrade) or layer 8 (Level 8 upgrade)
+          // These are EXPENSES, not income - should NOT appear in income history
+          // Only referral (0), sponsor (1), upline (10+), and royalty should be shown
+          if (layer === 4 || layer === 8) {
+            console.log(`  ✅ Filtering out MynnGift deposit (layer ${layer}, amount ${amountInEther} = EXPENSE)`);
+            return null; // Skip MynnGift deposits from income history
           }
           
-          // Special handling for layer 4: if small amount, it's likely a royalty claim not MynnGift
-          if (layer === 4 && senderId === receiverId && amountInEther < MIN_MYNNGIFT_DONATION) {
-            console.log(`  💰 Layer 4 with small amount ${amountInEther} detected - treating as ROYALTY`);
-            // Will be mapped to ROYALTY below
+          if (layer >= 2 && layer <= 9 && senderId === receiverId) {
+            console.log(`  ✅ Filtering out other MynnGift deposit (level ${layer}, self-referential)`);
+            return null; // Skip other MynnGift entries
           }
           
-          // Determine income type based on layer and amount
-          const incomeType = ((lyr, amt) => {
+          // Determine income type based on layer
+          const incomeType = ((lyr) => {
               if (lyr === 0) {
                 console.log(`  → Mapped to REFERRAL`);
                 return IncomeType.REFERRAL;
@@ -1182,18 +1177,13 @@ useEffect(() => {
                 console.log(`  → Mapped to SPONSOR`);
                 return IncomeType.SPONSOR;
               }
-              // Layer 4: Can be MynnGift Rank 5 or Royalty Claim
-              // Distinguish by amount: royalty claims are small, MynnGift Rank 5 is 0.1594323+
               if (lyr === 4) {
-                const amountEther = amt / 1e18;
-                if (amountEther < 0.1) { // Likely royalty claim
-                  console.log(`  → Mapped to ROYALTY (small amount ${amountEther})`);
-                  return IncomeType.ROYALTY;
-                }
+                console.log(`  → Mapped to ROYALTY ✅ (layer 4 after MynnGift filtered)`);
+                return IncomeType.ROYALTY;  // Layer 4 remaining = Royalty (MynnGift already filtered)
               }
               if (lyr === 11) {
-                console.log(`  → Mapped to ROYALTY ✅`);
-                return IncomeType.ROYALTY;  // ✅ Layer 11 = Royalty (from claimRoyalty)
+                console.log(`  → Mapped to ROYALTY (layer 11)`);
+                return IncomeType.ROYALTY;
               }
               if (lyr >= 10 && lyr < 11) {
                 console.log(`  → Mapped to UPLINE`);
@@ -1202,7 +1192,7 @@ useEffect(() => {
               // Fallback for types not explicitly mapped
               console.log(`  → Mapped to REFERRAL (fallback)`);
               return IncomeType.REFERRAL; 
-          })(layer, Number(income.amount ?? 0));
+          })(layer);
 
           const senderIdFromContract = income.id?.toString() || '';
           // Ambil receiverId dari data income, jangan selalu userId dashboard
@@ -2406,12 +2396,11 @@ useEffect(() => {
                   {incomeHistoryRaw.map((entry, idx) => {
                     const amountInBnb = entry.amount ? (Number(entry.amount) / 1e18).toFixed(6) : 'undefined';
                     const layerNum = entry.layer ? Number(entry.layer) : undefined;
-                    const amountInEther = Number(entry.amount ?? 0) / 1e18;
                     let layerName = '';
                     if (layerNum === 0) layerName = ' (Referral)';
                     else if (layerNum === 1) layerName = ' (Sponsor)';
-                    else if (layerNum === 4 && amountInEther < 0.1) layerName = ' (Royalty Claim!)';
-                    else if (layerNum === 4) layerName = ' (MynnGift Level 4)';
+                    else if (layerNum === 4) layerName = ' (MynnGift Level 4 DEPOSIT)';
+                    else if (layerNum === 8) layerName = ' (MynnGift Level 8 DEPOSIT)';
                     else if (layerNum === 11) layerName = ' (Royalty Claim!)';
                     else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
                     else if (layerNum >= 10 && layerNum < 11) layerName = ' (Upline)';
