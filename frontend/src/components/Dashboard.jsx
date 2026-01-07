@@ -1100,10 +1100,17 @@ useEffect(() => {
     enabled: !!userId && !!userInfo,
     watch: true,
     onSuccess: (data) => {
-      console.log('New income history received:', data);
+      console.log('✅ SUCCESS: Income history received from contract');
+      console.log('   Data length:', Array.isArray(data) ? data.length : 'not array');
+      console.log('   Raw data:', data);
+      if (Array.isArray(data)) {
+        data.forEach((entry, idx) => {
+          console.log(`   Entry ${idx}: layer=${entry.layer}, amount=${entry.amount}, id=${entry.id}, time=${entry.time}`);
+        });
+      }
     },
     onError: (error) => {
-      console.error('Error fetching income history:', error);
+      console.error('❌ Error fetching income history:', error);
     }
   });
 
@@ -1126,7 +1133,12 @@ useEffect(() => {
 
   // Process income history data with enhanced error handling and real-time updates
   useEffect(() => {
-    console.log('📊 Income History Raw Data:', incomeHistoryRaw);
+    console.log('� Income History useEffect running');
+    console.log('📊 incomeHistoryRaw:', incomeHistoryRaw);
+    console.log('   Is array?', Array.isArray(incomeHistoryRaw));
+    console.log('   Length:', Array.isArray(incomeHistoryRaw) ? incomeHistoryRaw.length : 'N/A');
+    console.log('   userId:', userId);
+    
     if (incomeHistoryRaw && Array.isArray(incomeHistoryRaw)) {
       try {
         const processedHistory = incomeHistoryRaw.map((income, idx) => {
