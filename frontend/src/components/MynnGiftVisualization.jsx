@@ -283,8 +283,8 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
   const { data: queuePosition } = useReadContract({
     ...mynngiftConfig,
     functionName: 'getWaitingQueuePosition',
-    args: [nobleGiftRank, userAddress],
-    enabled: !!userAddress && !!nobleGiftRank,
+    args: [nobleGiftRank, userAddress, streamEnum],
+    enabled: !!userAddress && !!nobleGiftRank && streamEnum !== undefined,
   });
 
   // Ambil data untuk setiap Rank
@@ -662,8 +662,10 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
             <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank ? `${getNobleGiftRankName(Number(nobleGiftRank))} (Rank ${nobleGiftRank})` : 'Loading...'}</p>
           </div>
           <div className="text-center sm:text-right">
-            <p className="text-gray-400 text-sm mb-1">Queue</p>
-            <p className="text-lg font-semibold text-[#FFD700]">{queuePosition && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'n/a'}</p>
+            <p className="text-gray-400 text-sm mb-1">Queue Position</p>
+            <p className="text-lg font-semibold text-[#FFD700]">
+              {queuePosition !== undefined && queuePosition !== null && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'Not in Queue'}
+            </p>
           </div>
         </div>
 
