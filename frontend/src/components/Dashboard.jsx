@@ -2023,18 +2023,61 @@ useEffect(() => {
           <div className="flex flex-col space-y-2">
             <span className="income-title">Royalty Income</span>
             <span className="income-value text-xl">
-              {(() => {
-                const pending = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[4])) : 0;
-                const claimed = claimedRoyalty;
-                return (pending + claimed).toFixed(4);
-              })()} opBNB
+              {incomeBreakdown ? ethers.formatEther(incomeBreakdown[4]) : '0'} opBNB
             </span>
             <span className="text-xs text-gray-400">
-              Claimed + Pending royalty income from network
+              Royalty income from network
             </span>
           </div>
         </div>
+        
+        {/* MynnGift Stream A Income (Level 4) */}
+        {isEligibleForStreamA && (
+          <div className="futuristic-card p-4">
+            <div className="flex flex-col space-y-2">
+              <span className="income-title">MynnGift Stream A Income</span>
+              <span className="income-value text-xl">
+                {totalMynngiftIncome.toFixed(4)} opBNB
+              </span>
+              <span className="text-xs text-gray-400">
+                Total income from MynnGift (Rank 1-8)
+              </span>
+              {/* Breakdown per rank MynnGift Stream A */}
+              <div className="mt-2">
+                {mynngiftIncomePerRank.length > 0 ? (
+                  <div className="space-y-1">
+                    {mynngiftIncomePerRank.map(item => (
+                      <div key={`streamA-rank-${item.rank}`} className="flex justify-between text-xs text-gray-300">
+                        <span>Rank {item.rank}</span>
+                        <span>{parseFloat(item.amount).toFixed(4)} opBNB</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500">No MynnGift income yet</span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* MynnGift Stream B Income (Level 8) - Future placeholder for dual stream */}
+        {isEligibleForStreamB && (
+          <div className="futuristic-card p-4 opacity-75">
+            <div className="flex flex-col space-y-2">
+              <span className="income-title">MynnGift Stream B Income</span>
+              <span className="income-value text-xl text-gray-400">
+                0.0000 opBNB
+              </span>
+              <span className="text-xs text-gray-400">
+                Dual stream independent income
+              </span>
+              <div className="mt-2">
+                <span className="text-xs text-gray-500">Fitur dual stream akan segera aktif</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2310,27 +2353,11 @@ useEffect(() => {
     return incomeHistory.filter(item => allowedIncomeTypes.includes(item.type) && item.type === Number(incomeFilter));
   }, [incomeHistory, incomeFilter, allowedIncomeTypes]);
 
-  // Calculate pagination data with useMemo to prevent unnecessary recalculations
-  const paginationData = useMemo(() => {
-    const totalPages = Math.ceil(filteredIncomeHistory.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    
-    // Ensure currentPage doesn't exceed totalPages
-    const validPage = Math.max(1, Math.min(currentPage, totalPages || 1));
-    
-    const indexOfLastItemValid = validPage * itemsPerPage;
-    const indexOfFirstItemValid = indexOfLastItemValid - itemsPerPage;
-    
-    return {
-      currentItems: filteredIncomeHistory.slice(indexOfFirstItemValid, indexOfLastItemValid),
-      totalPages,
-      validPage
-    };
-  }, [filteredIncomeHistory, currentPage, itemsPerPage]);
-
-  const currentItems = paginationData.currentItems;
-  const totalPages = paginationData.totalPages;
+  // Calculate pagination data
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredIncomeHistory.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredIncomeHistory.length / itemsPerPage);
 
   const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
@@ -2339,8 +2366,8 @@ useEffect(() => {
   // DEBUG PANEL - Visual Debug Info
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
-  // Income History Table Component - Memoized to prevent unnecessary re-renders
-  const IncomeHistoryTable = useMemo(() => () => (
+  // Income History Table Component
+  const IncomeHistoryTable = () => (
     <div className="bg-[#1A3A6A] w-full max-w-full p-3 sm:p-6 rounded-lg shadow-lg">
       {/* DEBUG PANEL */}
       <div className="mb-4">
@@ -2513,7 +2540,7 @@ useEffect(() => {
         </div>
       )}
     </div>
-  ), [currentItems, incomeHistory, incomeFilter, allowedIncomeTypes, currentPage, totalPages, handlePageChange, incomeHistoryRaw, showDebugPanel]);
+  );
 
   // Setup event listeners
   const setupEventListeners = useCallback(() => {
