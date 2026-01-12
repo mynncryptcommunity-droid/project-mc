@@ -75,13 +75,24 @@ const opbnbTestnet = {
   },
 };
 
+// ✅ Network-aware contract configuration
+const getContractAddress = (envKey, fallback) => {
+  // Try network-specific first: _OPBNB, _TESTNET
+  const mainnetAddr = import.meta.env[`${envKey}_OPBNB`];
+  const testnetAddr = import.meta.env[`${envKey}_OPBNDBTESTNET`];
+  const localhostAddr = import.meta.env[envKey];
+  
+  // Return localhost first (for dev), then mainnet, then fallback
+  return localhostAddr || mainnetAddr || fallback;
+};
+
 const mynncryptConfig = {
-  address: import.meta.env.VITE_MYNNCRYPT_ADDRESS || '0x1923bD63B2A468d48eA70f5690239dd9B0eb24cE',
+  address: getContractAddress('VITE_MYNNCRYPT_ADDRESS', '0x1923bD63B2A468d48eA70f5690239dd9B0eb24cE'),
   abi: mynncryptAbi,
 };
 
 const mynngiftConfig = {
-  address: import.meta.env.VITE_MYNNGIFT_ADDRESS || '0x82682F273a26Bbf5c6bD3BC267fc14c3E4D231f6',
+  address: getContractAddress('VITE_MYNNGIFT_ADDRESS', '0x82682F273a26Bbf5c6bD3BC267fc14c3E4D231f6'),
   abi: mynngiftAbi,
 };
 
@@ -93,7 +104,7 @@ const platformWalletConfig = {
 };
 
 const config = createConfig({
-  chains: [opbnbMainnet, opbnbTestnet, hardhatLocal],  // ✅ opBNB Mainnet FIRST for production
+  chains: [hardhatLocal, opbnbMainnet, opbnbTestnet],  // ✅ Hardhat FIRST for local testing
   connectors: [
     injected(), // Menghilangkan target: 'metaMask' agar semua injected wallet (termasuk TokenPocket) bisa dideteksi
     walletConnect({ projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'acdd07061043065cac8c0dbe90363982' }),
@@ -107,8 +118,8 @@ const config = createConfig({
 
 // Buat publicClient - akan di-update berdasarkan selected chain di AppContent
 const publicClientDefault = createPublicClient({
-  chain: opbnbMainnet,  // ✅ Default to mainnet for production
-  transport: http('https://opbnb-mainnet-rpc.bnbchain.org'),
+  chain: hardhatLocal,
+  transport: http('http://localhost:8545'),
 });
 
 const queryClient = new QueryClient();
