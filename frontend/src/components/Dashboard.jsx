@@ -717,10 +717,23 @@ useEffect(() => {
 
   // ✅ Check if user is platform wallet - use default referral ID instead of address lookup
   const isPlatformWallet = platformWalletConfig && address && (
-    address.toLowerCase() === platformWalletConfig.hardhat ||
-    address.toLowerCase() === platformWalletConfig.testnet ||
-    address.toLowerCase() === platformWalletConfig.mainnet
+    address.toLowerCase() === platformWalletConfig.hardhat?.toLowerCase() ||
+    address.toLowerCase() === platformWalletConfig.testnet?.toLowerCase() ||
+    address.toLowerCase() === platformWalletConfig.mainnet?.toLowerCase()
   );
+
+  // Debug: Log platform wallet check
+  useEffect(() => {
+    if (address && platformWalletConfig) {
+      console.log('🔍 Platform Wallet Check:', {
+        connectedAddress: address.toLowerCase(),
+        hardhat: platformWalletConfig.hardhat?.toLowerCase(),
+        testnet: platformWalletConfig.testnet?.toLowerCase(),
+        mainnet: platformWalletConfig.mainnet?.toLowerCase(),
+        isPlatformWallet: isPlatformWallet,
+      });
+    }
+  }, [address, platformWalletConfig, isPlatformWallet]);
 
   // Fetch user ID (skip for platform wallet, will use default referral ID)
   const { 
@@ -739,13 +752,22 @@ useEffect(() => {
   // ✅ Handle user registration check - redirect if not registered
   useEffect(() => {
     // Skip check if wallet not connected
-    if (!isConnected) return;
+    if (!isConnected) {
+      console.log('⏳ Wallet not connected yet');
+      return;
+    }
     
     // Platform wallet always OK
-    if (isPlatformWallet) return;
+    if (isPlatformWallet) {
+      console.log('✅ Platform wallet detected - skipping registration check');
+      return;
+    }
     
     // Still loading user ID
-    if (userIdLoading) return;
+    if (userIdLoading) {
+      console.log('⏳ Loading user ID...');
+      return;
+    }
     
     // User exists and has a userId
     if (userId && userId.length > 0) {
