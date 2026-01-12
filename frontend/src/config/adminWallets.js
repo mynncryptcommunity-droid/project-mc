@@ -31,16 +31,15 @@ const HARDHAT_WALLETS = {
   investor: []
 };
 
-// ===== OPBNB TESTNET (PRODUCTION) =====
-// Dynamically load from environment variables
+// ===== OPBNB MAINNET (PRODUCTION) =====
+// Platform/Owner wallet from smart contract deployment
 const PRODUCTION_WALLETS = {
   owner: [
-    getPlatformWallet(), // Use environment variable
-    '0x2f48b3F7D3b2233ba1cFb2e077cF2E703eFcD7b5'  // Optional secondary owner
+    getPlatformWallet(), // Use environment variable: 0xd442eA3d7909e8e768DcD8D7ed7e39C5D6759928
+    '0xd442eA3d7909e8e768DcD8D7ed7e39C5D6759928' // Owner/Admin wallet (mainnet)
   ],
   investor: [
-    '0x3A3214EbC975F7761288271aeBf72caB946a8b83', // investor1
-    '0xb3174FB5f5FEAB8245B910Ba792c0AD25B024871'  // investor2
+    '0xd442eA3d7909e8e768DcD8D7ed7e39C5D6759928' // Owner can also see investor dashboard
   ]
 };
 
