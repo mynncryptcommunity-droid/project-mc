@@ -93,7 +93,7 @@ const platformWalletConfig = {
 };
 
 const config = createConfig({
-  chains: [hardhatLocal, opbnbMainnet, opbnbTestnet],  // ✅ Hardhat FIRST for local testing
+  chains: [opbnbMainnet, opbnbTestnet, hardhatLocal],  // ✅ opBNB Mainnet FIRST for production
   connectors: [
     injected(), // Menghilangkan target: 'metaMask' agar semua injected wallet (termasuk TokenPocket) bisa dideteksi
     walletConnect({ projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'acdd07061043065cac8c0dbe90363982' }),
@@ -107,8 +107,8 @@ const config = createConfig({
 
 // Buat publicClient - akan di-update berdasarkan selected chain di AppContent
 const publicClientDefault = createPublicClient({
-  chain: hardhatLocal,
-  transport: http('http://localhost:8545'),
+  chain: opbnbMainnet,  // ✅ Default to mainnet for production
+  transport: http('https://opbnb-mainnet-rpc.bnbchain.org'),
 });
 
 const queryClient = new QueryClient();
