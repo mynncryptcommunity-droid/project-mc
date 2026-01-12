@@ -242,21 +242,35 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
 
   // --- 1. Ambil Data Awal dan Real-time dari Kontrak --- //
 
-  // User's NobleGift Rank
+  // User's Stream-Specific Rank (Stream A or B)
   const { data: nobleGiftRank, refetch: refetchNobleGiftRank } = useReadContract({
     ...mynngiftConfig,
-    functionName: 'getUserRank',
+    functionName: streamEnum === 0 ? 'userRank_StreamA' : 'userRank_StreamB',
     args: [userAddress],
     enabled: !!userAddress,
   });
 
-  // User's NobleGift Status
-  const { data: nobleGiftStatus, refetch: refetchNobleGiftStatus } = useReadContract({
+  // User's Stream-Specific Status (checking donor/receiver status per stream)
+  // Fetch both donor and receiver status to determine overall status
+  const { data: isDonorStatus } = useReadContract({
     ...mynngiftConfig,
-    functionName: 'getUserStatus',
+    functionName: streamEnum === 0 ? 'isDonor_StreamA' : 'isDonor_StreamB',
     args: [userAddress],
     enabled: !!userAddress,
   });
+
+  const { data: isReceiverStatus } = useReadContract({
+    ...mynngiftConfig,
+    functionName: streamEnum === 0 ? 'isReceiver_StreamA' : 'isReceiver_StreamB',
+    args: [userAddress],
+    enabled: !!userAddress,
+  });
+
+  // Compute status string based on donor/receiver flags
+  const nobleGiftStatus = isDonorStatus && isReceiverStatus ? 'Donor & Recipient' : 
+                          isDonorStatus ? 'Donor' : 
+                          isReceiverStatus ? 'Recipient' : 
+                          'Not Active';
 
   // Ambil nilai MAX_DONORS_PER_RANK dari kontrak
   const { data: maxDonorsPerRank } = useReadContract({
@@ -279,65 +293,332 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     enabled: true,
   });
 
-  // Tambahkan hook untuk mengambil posisi antrean user
+  // Calculate next rank for queue position check
+  const nextRank = nobleGiftRank && Number(nobleGiftRank) < 8 ? Number(nobleGiftRank) + 1 : null;
+
+  // Tambahkan hook untuk mengambil posisi antrean user di RANK BERIKUTNYA (bukan rank saat ini)
+  // User yang sudah jadi donor di rank saat ini akan masuk queue di rank berikutnya
   const { data: queuePosition } = useReadContract({
     ...mynngiftConfig,
     functionName: 'getWaitingQueuePosition',
-    args: [nobleGiftRank, userAddress, streamEnum],
-    enabled: !!userAddress && !!nobleGiftRank && streamEnum !== undefined,
+    args: [nextRank, userAddress, streamEnum],
+    enabled: !!userAddress && nextRank !== null && streamEnum !== undefined,
   });
 
-  // Ambil data untuk setiap Rank
-  const rankReads = Array.from({ length: 8 }, (_, i) => {
-    const rank = i + 1;
-    // NOTE: We no longer need separate call to getRankDonorHistory
-    // Current donors will be extracted from getCurrentRankStatus return value
-    const { data: waitingQueue, refetch: refetchWaitingQueue } = useReadContract({
-      ...mynngiftConfig,
-      functionName: 'getRankWaitingQueueByStream',
-      args: [rank, streamEnum],
-      enabled: true,
-    });
-    const { data: currentRankStatus, refetch: refetchCurrentRankStatus } = useReadContract({
-      ...mynngiftConfig,
-      functionName: 'getCurrentRankStatus',
-      args: [rank, streamEnum],
-      enabled: true,
-    });
-    const { data: queueStatus, refetch: refetchQueueStatus } = useReadContract({
-      ...mynngiftConfig,
-      functionName: 'getQueueStatus',
-      args: [rank, streamEnum],
-      enabled: true,
-    });
-    const { data: rankDonationValue, refetch: refetchRankDonationValue } = useReadContract({
-      ...mynngiftConfig,
-      functionName: 'rankDonationValues',
-      args: [rank],
-      enabled: true,
-    });
-    const { data: currentRankCycle, refetch: refetchCurrentRankCycle } = useReadContract({
-      ...mynngiftConfig,
-      functionName: 'getCurrentRankCycle',
-      args: [rank, streamEnum],
-      enabled: true,
-    });
-
-    return {
-      rank,
-      currentRankStatus: currentRankStatus,
-      waitingQueue: waitingQueue || [],
-      queueStatus: queueStatus,
-      // Apply stream-specific multiplier: Stream B is 0.0936/0.0081 = ~11.56x Stream A
-      rankDonationValue: rankDonationValue && streamEnum === 1 ? (BigInt(rankDonationValue) * 93600000000000000n / 8100000000000000n) : rankDonationValue,
-      currentRankCycle: currentRankCycle,
-      refetchCurrentRankStatus,
-      refetchWaitingQueue,
-      refetchQueueStatus,
-      refetchRankDonationValue,
-      refetchCurrentRankCycle,
-    };
+  // Ambil data untuk setiap Rank - 8 separate calls untuk 8 ranks
+  const { data: waitingQueue1, refetch: refetchWaitingQueue1 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [1, streamEnum],
+    enabled: true,
   });
+  const { data: currentRankStatus1, refetch: refetchCurrentRankStatus1 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [1, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus1, refetch: refetchQueueStatus1 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [1, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle1, refetch: refetchCurrentRankCycle1 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [1, streamEnum],
+    enabled: true,
+  });
+
+  const { data: waitingQueue2, refetch: refetchWaitingQueue2 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [2, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankStatus2, refetch: refetchCurrentRankStatus2 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [2, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus2, refetch: refetchQueueStatus2 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [2, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle2, refetch: refetchCurrentRankCycle2 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [2, streamEnum],
+    enabled: true,
+  });
+
+  const { data: waitingQueue3, refetch: refetchWaitingQueue3 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [3, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankStatus3, refetch: refetchCurrentRankStatus3 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [3, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus3, refetch: refetchQueueStatus3 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [3, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle3, refetch: refetchCurrentRankCycle3 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [3, streamEnum],
+    enabled: true,
+  });
+
+  const { data: waitingQueue4, refetch: refetchWaitingQueue4 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [4, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankStatus4, refetch: refetchCurrentRankStatus4 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [4, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus4, refetch: refetchQueueStatus4 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [4, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle4, refetch: refetchCurrentRankCycle4 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [4, streamEnum],
+    enabled: true,
+  });
+
+  const { data: waitingQueue5, refetch: refetchWaitingQueue5 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [5, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankStatus5, refetch: refetchCurrentRankStatus5 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [5, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus5, refetch: refetchQueueStatus5 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [5, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle5, refetch: refetchCurrentRankCycle5 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [5, streamEnum],
+    enabled: true,
+  });
+
+  const { data: waitingQueue6, refetch: refetchWaitingQueue6 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [6, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankStatus6, refetch: refetchCurrentRankStatus6 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [6, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus6, refetch: refetchQueueStatus6 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [6, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle6, refetch: refetchCurrentRankCycle6 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [6, streamEnum],
+    enabled: true,
+  });
+
+  const { data: waitingQueue7, refetch: refetchWaitingQueue7 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [7, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankStatus7, refetch: refetchCurrentRankStatus7 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [7, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus7, refetch: refetchQueueStatus7 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [7, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle7, refetch: refetchCurrentRankCycle7 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [7, streamEnum],
+    enabled: true,
+  });
+
+  const { data: waitingQueue8, refetch: refetchWaitingQueue8 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getRankWaitingQueueByStream',
+    args: [8, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankStatus8, refetch: refetchCurrentRankStatus8 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankStatus',
+    args: [8, streamEnum],
+    enabled: true,
+  });
+  const { data: queueStatus8, refetch: refetchQueueStatus8 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getQueueStatus',
+    args: [8, streamEnum],
+    enabled: true,
+  });
+  const { data: currentRankCycle8, refetch: refetchCurrentRankCycle8 } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getCurrentRankCycle',
+    args: [8, streamEnum],
+    enabled: true,
+  });
+
+  // Build rankReads array from individual hook results
+  const rankReads = [
+    {
+      rank: 1,
+      currentRankStatus: currentRankStatus1,
+      waitingQueue: waitingQueue1 || [],
+      queueStatus: queueStatus1,
+      rankDonationValue: currentRankStatus1 && currentRankStatus1[2] ? (BigInt(currentRankStatus1[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle1,
+      refetchCurrentRankStatus: refetchCurrentRankStatus1,
+      refetchWaitingQueue: refetchWaitingQueue1,
+      refetchQueueStatus: refetchQueueStatus1,
+      refetchCurrentRankCycle: refetchCurrentRankCycle1,
+    },
+    {
+      rank: 2,
+      currentRankStatus: currentRankStatus2,
+      waitingQueue: waitingQueue2 || [],
+      queueStatus: queueStatus2,
+      rankDonationValue: currentRankStatus2 && currentRankStatus2[2] ? (BigInt(currentRankStatus2[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle2,
+      refetchCurrentRankStatus: refetchCurrentRankStatus2,
+      refetchWaitingQueue: refetchWaitingQueue2,
+      refetchQueueStatus: refetchQueueStatus2,
+      refetchCurrentRankCycle: refetchCurrentRankCycle2,
+    },
+    {
+      rank: 3,
+      currentRankStatus: currentRankStatus3,
+      waitingQueue: waitingQueue3 || [],
+      queueStatus: queueStatus3,
+      rankDonationValue: currentRankStatus3 && currentRankStatus3[2] ? (BigInt(currentRankStatus3[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle3,
+      refetchCurrentRankStatus: refetchCurrentRankStatus3,
+      refetchWaitingQueue: refetchWaitingQueue3,
+      refetchQueueStatus: refetchQueueStatus3,
+      refetchCurrentRankCycle: refetchCurrentRankCycle3,
+    },
+    {
+      rank: 4,
+      currentRankStatus: currentRankStatus4,
+      waitingQueue: waitingQueue4 || [],
+      queueStatus: queueStatus4,
+      rankDonationValue: currentRankStatus4 && currentRankStatus4[2] ? (BigInt(currentRankStatus4[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle4,
+      refetchCurrentRankStatus: refetchCurrentRankStatus4,
+      refetchWaitingQueue: refetchWaitingQueue4,
+      refetchQueueStatus: refetchQueueStatus4,
+      refetchCurrentRankCycle: refetchCurrentRankCycle4,
+    },
+    {
+      rank: 5,
+      currentRankStatus: currentRankStatus5,
+      waitingQueue: waitingQueue5 || [],
+      queueStatus: queueStatus5,
+      rankDonationValue: currentRankStatus5 && currentRankStatus5[2] ? (BigInt(currentRankStatus5[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle5,
+      refetchCurrentRankStatus: refetchCurrentRankStatus5,
+      refetchWaitingQueue: refetchWaitingQueue5,
+      refetchQueueStatus: refetchQueueStatus5,
+      refetchCurrentRankCycle: refetchCurrentRankCycle5,
+    },
+    {
+      rank: 6,
+      currentRankStatus: currentRankStatus6,
+      waitingQueue: waitingQueue6 || [],
+      queueStatus: queueStatus6,
+      rankDonationValue: currentRankStatus6 && currentRankStatus6[2] ? (BigInt(currentRankStatus6[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle6,
+      refetchCurrentRankStatus: refetchCurrentRankStatus6,
+      refetchWaitingQueue: refetchWaitingQueue6,
+      refetchQueueStatus: refetchQueueStatus6,
+      refetchCurrentRankCycle: refetchCurrentRankCycle6,
+    },
+    {
+      rank: 7,
+      currentRankStatus: currentRankStatus7,
+      waitingQueue: waitingQueue7 || [],
+      queueStatus: queueStatus7,
+      rankDonationValue: currentRankStatus7 && currentRankStatus7[2] ? (BigInt(currentRankStatus7[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle7,
+      refetchCurrentRankStatus: refetchCurrentRankStatus7,
+      refetchWaitingQueue: refetchWaitingQueue7,
+      refetchQueueStatus: refetchQueueStatus7,
+      refetchCurrentRankCycle: refetchCurrentRankCycle7,
+    },
+    {
+      rank: 8,
+      currentRankStatus: currentRankStatus8,
+      waitingQueue: waitingQueue8 || [],
+      queueStatus: queueStatus8,
+      rankDonationValue: currentRankStatus8 && currentRankStatus8[2] ? (BigInt(currentRankStatus8[2]) / 6n) : undefined,
+      currentRankCycle: currentRankCycle8,
+      refetchCurrentRankStatus: refetchCurrentRankStatus8,
+      refetchWaitingQueue: refetchWaitingQueue8,
+      refetchQueueStatus: refetchQueueStatus8,
+      refetchCurrentRankCycle: refetchCurrentRankCycle8,
+    },
+  ];
+
+  // Debug: Log all incoming hook data
+  useEffect(() => {
+    console.log('=== Hook Data Debug ===');
+    console.log('waitingQueue1:', waitingQueue1);
+    console.log('waitingQueue2:', waitingQueue2);
+    console.log('waitingQueue3:', waitingQueue3);
+    console.log('waitingQueue4:', waitingQueue4);
+    console.log('waitingQueue5:', waitingQueue5);
+    console.log('waitingQueue6:', waitingQueue6);
+    console.log('waitingQueue7:', waitingQueue7);
+    console.log('waitingQueue8:', waitingQueue8);
+    console.log('========================');
+  }, [waitingQueue1, waitingQueue2, waitingQueue3, waitingQueue4, waitingQueue5, waitingQueue6, waitingQueue7, waitingQueue8]);
 
   useEffect(() => {
     const newRanksData = {};
@@ -360,7 +641,6 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         refetchWaitingQueue: data.refetchWaitingQueue,
         refetchCurrentRankStatus: data.refetchCurrentRankStatus,
         refetchQueueStatus: data.refetchQueueStatus,
-        refetchRankDonationValue: data.refetchRankDonationValue,
         refetchCurrentRankCycle: data.refetchCurrentRankCycle,
       };
     });
@@ -369,6 +649,20 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
     if (nobleGiftRank !== undefined && nobleGiftRank !== null && newRanksData[Number(nobleGiftRank)]) {
       // setCurrentRankState(newRanksData[Number(nobleGiftRank)]);
     }
+    
+    // Debug: Log all ranks with queue info
+    console.log('=== RanksData Updated ===');
+    for (let r = 1; r <= 8; r++) {
+      const rankData = newRanksData[r];
+      console.log(`Rank ${r}:`, {
+        hasData: !!rankData,
+        waitingQueueLength: rankData?.waitingQueue?.length || 0,
+        waitingQueue: rankData?.waitingQueue || [],
+        donors: rankData?.donors?.length || 0,
+      });
+    }
+    console.log('========================');
+    
     console.log('Receiver Histories:', receiverHistories);
     receiverHistories.forEach((history, index) => {
       console.log(`Rank ${index + 1} Receiver History:`, history);
@@ -376,7 +670,15 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         console.log(`Last Receiver for Rank ${index + 1}:`, history[history.length - 1]);
       }
     });
-  }, [nobleGiftRank, maxDonorsPerRank, ...rankReads.flatMap(r => [r.waitingQueue, r.currentRankStatus, r.queueStatus, r.rankDonationValue, r.currentRankCycle]), ...receiverHistories]);
+  }, [
+    nobleGiftRank, 
+    maxDonorsPerRank, 
+    waitingQueue1, waitingQueue2, waitingQueue3, waitingQueue4, waitingQueue5, waitingQueue6, waitingQueue7, waitingQueue8,
+    currentRankStatus1, currentRankStatus2, currentRankStatus3, currentRankStatus4, currentRankStatus5, currentRankStatus6, currentRankStatus7, currentRankStatus8,
+    queueStatus1, queueStatus2, queueStatus3, queueStatus4, queueStatus5, queueStatus6, queueStatus7, queueStatus8,
+    currentRankCycle1, currentRankCycle2, currentRankCycle3, currentRankCycle4, currentRankCycle5, currentRankCycle6, currentRankCycle7, currentRankCycle8,
+    receiverHistory1, receiverHistory2, receiverHistory3, receiverHistory4, receiverHistory5, receiverHistory6, receiverHistory7, receiverHistory8
+  ]);
 
   // --- 2. Dengarkan Event Real-time untuk Animasi --- //
 
@@ -427,7 +729,6 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
 
         const oldUserRank = nobleGiftRank ? Number(nobleGiftRank) : 0;
 
-        await refetchNobleGiftStatus();
         await refetchNobleGiftRank();
 
         if (eventUser.toLowerCase() === userAddress.toLowerCase() && nobleGiftRank !== undefined && Number(nobleGiftRank) > oldUserRank) {
@@ -618,13 +919,27 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
   // Fungsi untuk translate status dari bahasa Indonesia ke Inggris
   const formatStatusDisplay = useCallback((status) => {
     if (!status) return 'Loading...';
+    
+    const statusLower = status.toLowerCase();
+    
     const statusMap = {
       'tidak aktif': 'Not Active',
-      'Tidak Aktif': 'Not Active',
+      'belum aktif': 'Not Active',
       'aktif': 'Active',
-      'Aktif': 'Active',
+      'donor': 'Donor',
+      'penerima': 'Recipient',
+      'donor & penerima': 'Donor & Recipient',
+      'donor and recipient': 'Donor & Recipient',
     };
-    return statusMap[status] || status; // Return original if not found in map
+    
+    // Check each mapping
+    for (const [indonesian, english] of Object.entries(statusMap)) {
+      if (statusLower.includes(indonesian)) {
+        return english;
+      }
+    }
+    
+    return status;
   }, []);
 
   // Fungsi untuk mendapatkan gambar berdasarkan rank
@@ -664,7 +979,11 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           <div className="text-center sm:text-right">
             <p className="text-gray-400 text-sm mb-1">Queue Position</p>
             <p className="text-lg font-semibold text-[#FFD700]">
-              {queuePosition !== undefined && queuePosition !== null && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'Not in Queue'}
+              {nobleGiftRank && Number(nobleGiftRank) === 8 
+                ? '✅ Completed' 
+                : (queuePosition !== undefined && queuePosition !== null && Number(queuePosition) > 0 
+                  ? `#${Number(queuePosition)} in Rank ${nextRank}`
+                  : 'Not in Queue')}
             </p>
           </div>
         </div>
@@ -1063,98 +1382,122 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
           )}
       </div>
 
-      {/* Waiting Queue Details - New Section */}
-      {nobleGiftRank && ranksData[Number(nobleGiftRank)] && ranksData[Number(nobleGiftRank)].waitingQueue.length > 0 && (
-        <div className="waiting-queue-details mt-8 w-full max-w-4xl bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">
-          <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">⏳ Queue Details</h3>
+      {/* Waiting Queue Details - Untuk Setiap Rank */}
+      <div className="waiting-queue-details-all mt-8 w-full space-y-6">
+        {Array.from({ length: 8 }).map((_, i) => {
+          const rank = i + 1;
+          const rankInfo = ranksData[rank];
+          const hasQueue = rankInfo && rankInfo.waitingQueue && Array.isArray(rankInfo.waitingQueue) && rankInfo.waitingQueue.length > 0;
           
-          {/* Queue Summary */}
-          <div className="mb-6 p-4 bg-[#102E50]/50 rounded-lg border border-[#4DA8DA]/30">
-            <div className="grid grid-cols-3 gap-4 text-center mb-4">
-              <div>
-                <p className="text-gray-400 text-xs mb-1">CURRENT RANK</p>
-                <p className="text-2xl font-bold text-[#F5C45E]">{getNobleGiftRankName(Number(nobleGiftRank))}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-1">YOUR POSITION</p>
-                <p className="text-2xl font-bold text-[#FFD700]">#{Number(queuePosition) || '-'}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-1">QUEUE LENGTH</p>
-                <p className="text-2xl font-bold text-[#4DA8DA]">{ranksData[Number(nobleGiftRank)].waitingQueue.length}</p>
-              </div>
-            </div>
-            
-            {queuePosition && Number(queuePosition) <= 3 && (
-              <div className="text-center p-3 bg-[#F5C45E]/20 rounded-lg border border-[#F5C45E]/50">
-                <p className="text-[#F5C45E] font-semibold">🎯 You're close! Position #{Number(queuePosition)} will receive funds soon!</p>
-              </div>
-            )}
-          </div>
+          console.log(`Queue check for Rank ${rank}:`, {
+            hasRankInfo: !!rankInfo,
+            hasWaitingQueue: !!rankInfo?.waitingQueue,
+            isArray: Array.isArray(rankInfo?.waitingQueue),
+            length: rankInfo?.waitingQueue?.length || 0,
+            hasQueue: hasQueue,
+            currentRank: nobleGiftRank,
+            nextRank: nextRank,
+            isNextRank: rank === nextRank,
+          });
+          
+          if (!hasQueue) {
+            console.log(`Rank ${rank}: No queue or not ready.`);
+            return null;
+          }
 
-          {/* Waiting Queue List */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-[#4DA8DA] mb-4">Queue Order (By User ID)</p>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {ranksData[Number(nobleGiftRank)].waitingQueue.map((userAddress, index) => {
-                const isCurrentUser = userAddress && userAddress.toLowerCase() === (userAddress || '').toLowerCase();
-                const position = index + 1;
-                return (
-                  <div 
-                    key={index}
-                    className={`p-3 rounded-lg border-l-4 transition-all duration-200 ${
-                      isCurrentUser 
-                        ? 'bg-[#F5C45E]/20 border-[#F5C45E] text-[#F5C45E]' 
-                        : 'bg-[#102E50]/50 border-[#4DA8DA] hover:bg-[#1A3A6A] text-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          position === 1 ? 'bg-[#FFD700] text-[#102E50]' : 'bg-[#4DA8DA] text-white'
-                        }`}>
-                          {position}
-                        </div>
-                        <div>
-                          <p className="text-xs opacity-75">User ID</p>
-                          <p className="font-mono font-semibold">{userAddress.slice(0, 8)}...{userAddress.slice(-6)}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {position === 1 && <span className="inline-block px-3 py-1 bg-[#FFD700] text-[#102E50] rounded-full text-xs font-bold">NEXT RECEIVER</span>}
-                        {isCurrentUser && <span className="inline-block px-3 py-1 bg-[#F5C45E] text-[#102E50] rounded-full text-xs font-bold">YOU</span>}
-                      </div>
-                    </div>
+          console.log(`Rank ${rank}: Showing queue with ${rankInfo.waitingQueue.length} users`);
+
+          return (
+            <div 
+              key={rank}
+              className="rank-queue-section bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300"
+            >
+              <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#F5C45E] to-[#4DA8DA] bg-clip-text text-transparent mb-5">⏳ Rank {rank} - {getNobleGiftRankName(rank)} Queue</h3>
+              
+              {/* Queue Summary */}
+              <div className="mb-6 p-4 bg-[#102E50]/50 rounded-lg border border-[#4DA8DA]/30">
+                <div className="grid grid-cols-3 gap-4 text-center mb-4">
+                  <div>
+                    <p className="text-gray-400 text-xs mb-1">RANK</p>
+                    <p className="text-2xl font-bold text-[#F5C45E]">{getNobleGiftRankName(rank)}</p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Estimated Payment Info */}
-          {ranksData[Number(nobleGiftRank)] && (
-            <div className="mt-6 p-4 bg-[#102E50]/50 rounded-lg border border-[#4DA8DA]/30">
-              <p className="text-xs text-gray-400 mb-2">RANK PROGRESS</p>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 bg-[#1A3A6A] rounded-full h-3 overflow-hidden border border-[#4DA8DA]/30">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] transition-all duration-500"
-                    style={{
-                      width: `${(ranksData[Number(nobleGiftRank)].donors.length / Number(maxDonorsPerRank || 6)) * 100}%`
-                    }}
-                  />
+                  <div>
+                    <p className="text-gray-400 text-xs mb-1">YOUR POSITION</p>
+                    <p className="text-2xl font-bold text-[#FFD700]">
+                      {rank === nextRank && queuePosition ? `#${Number(queuePosition)}` : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-xs mb-1">QUEUE LENGTH</p>
+                    <p className="text-2xl font-bold text-[#4DA8DA]">{rankInfo.waitingQueue.length}</p>
+                  </div>
                 </div>
-                <span className="text-sm font-semibold text-[#F5C45E]">
-                  {ranksData[Number(nobleGiftRank)].donors.length}/{Number(maxDonorsPerRank || 6)} Donors
-                </span>
+                
+                {rank === nextRank && queuePosition && Number(queuePosition) <= 3 && (
+                  <div className="text-center p-3 bg-[#F5C45E]/20 rounded-lg border border-[#F5C45E]/50">
+                    <p className="text-[#F5C45E] font-semibold">🎯 You're close! Position #{Number(queuePosition)} will receive funds soon!</p>
+                  </div>
+                )}
               </div>
-              {ranksData[Number(nobleGiftRank)].donors.length === Number(maxDonorsPerRank || 6) && (
-                <p className="text-xs text-[#00FF88] font-semibold mt-2">✅ Rank is FULL! Payments will be distributed soon!</p>
-              )}
+
+              {/* Waiting Queue List */}
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-[#4DA8DA] mb-4">Queue Order (By User ID)</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {rankInfo.waitingQueue.map((userAddressInQueue, index) => {
+                    const isCurrentUser = userAddress && userAddressInQueue && userAddressInQueue.toLowerCase() === userAddress.toLowerCase();
+                    const position = index + 1;
+                    return (
+                      <div 
+                        key={index}
+                        className={`p-3 rounded-lg border-l-4 transition-all duration-200 ${
+                          isCurrentUser 
+                            ? 'bg-[#F5C45E]/20 border-[#F5C45E] text-[#F5C45E]' 
+                            : 'bg-[#102E50]/50 border-[#4DA8DA] hover:bg-[#1A3A6A] text-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                              position === 1 ? 'bg-[#FFD700] text-[#102E50]' : 'bg-[#4DA8DA] text-white'
+                            }`}>
+                              {position}
+                            </div>
+                            <div>
+                              <p className="text-xs opacity-75">User ID</p>
+                              <p className="font-mono font-semibold">{userAddressInQueue.slice(0, 8)}...{userAddressInQueue.slice(-6)}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {position === 1 && <span className="inline-block px-3 py-1 bg-[#FFD700] text-[#102E50] rounded-full text-xs font-bold">NEXT RECEIVER</span>}
+                            {isCurrentUser && <span className="inline-block px-3 py-1 bg-[#F5C45E] text-[#102E50] rounded-full text-xs font-bold">YOU</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Estimated Payment Info */}
+              <div className="mt-6 p-4 bg-[#102E50]/50 rounded-lg border border-[#4DA8DA]/30">
+                <p className="text-xs text-gray-400 mb-2">RANK PROGRESS</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-[#1A3A6A] rounded-full h-3 overflow-hidden border border-[#4DA8DA]/30">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#4DA8DA] to-[#F5C45E] transition-all duration-500"
+                      style={{
+                        width: `${(rankInfo.donors.length / Number(maxDonorsPerRank || 6)) * 100}%`
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-[#F5C45E]">{rankInfo.donors.length}/{Number(maxDonorsPerRank || 6)} Donors</span>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
       {/* Recent MynnGift Activity History - Enhanced */}
       <div className="recent-events mt-8 w-full max-w-4xl bg-gradient-to-br from-[#102E50] via-[#1A3A6A] to-[#102E50] p-6 rounded-xl border border-[#4DA8DA]/40 shadow-xl hover:shadow-2xl hover:border-[#4DA8DA]/60 transition-all duration-300">

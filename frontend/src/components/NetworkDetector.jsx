@@ -53,9 +53,9 @@ export function NetworkDetector() {
     },
   };
 
-  // Target network (PREFER TESTNET - less aggressive)
-  const TARGET_CHAIN_ID = 5611;
-  const TARGET_CHAIN_NAME = 'opBNB Testnet';
+  // Target network (PRODUCTION - Mainnet)
+  const TARGET_CHAIN_ID = 204;
+  const TARGET_CHAIN_NAME = 'opBNB Mainnet';
 
   useEffect(() => {
     // Only run jika wallet connected

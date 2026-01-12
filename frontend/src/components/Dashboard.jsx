@@ -605,19 +605,22 @@ function Dashboard({ mynncryptConfig, mynngiftConfig, platformWalletConfig }) {
     // Normalize status to lowercase for comparison
     const statusLower = status.toLowerCase();
     
-    // Check for "tidak aktif" or "belum aktif" variations (case-insensitive)
-    if (statusLower.includes('tidak aktif') || statusLower.includes('belum aktif')) {
-      return 'Not Active';
-    }
+    // Map Indonesian status to English
+    const statusMap = {
+      'tidak aktif': 'Not Active',
+      'belum aktif': 'Not Active',
+      'aktif': 'Active',
+      'donor': 'Donor',
+      'penerima': 'Recipient',
+      'donor & penerima': 'Donor & Recipient',
+      'donor and recipient': 'Donor & Recipient',
+    };
     
-    // Check for "aktif" (case-insensitive)
-    if (statusLower.includes('aktif')) {
-      return 'Active';
-    }
-    
-    // Check for English status terms (shouldn't need translation)
-    if (statusLower.includes('donor') || statusLower.includes('recipient')) {
-      return status; // Already in English
+    // Check each mapping
+    for (const [indonesian, english] of Object.entries(statusMap)) {
+      if (statusLower.includes(indonesian)) {
+        return english;
+      }
     }
     
     // Default: return original status
@@ -964,6 +967,54 @@ useEffect(() => {
     enabled: !!address,
   });
 
+  // ✅ NEW: Fetch Stream A income (from Level 4 deposits)
+  const { data: mynnGiftIncomeStreamA, refetch: refetchMynnGiftIncomeStreamA } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserTotalIncome_StreamA',
+    args: [address],
+    enabled: !!address,
+  });
+
+  // ✅ NEW: Fetch Stream B income (from Level 8 deposits)
+  const { data: mynnGiftIncomeStreamB, refetch: refetchMynnGiftIncomeStreamB } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserTotalIncome_StreamB',
+    args: [address],
+    enabled: !!address,
+  });
+
+  // ✅ NEW: Fetch Stream A rank
+  const { data: mynnGiftRankStreamA } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserRank_StreamA',
+    args: [address],
+    enabled: !!address,
+  });
+
+  // ✅ NEW: Fetch Stream B rank
+  const { data: mynnGiftRankStreamB } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserRank_StreamB',
+    args: [address],
+    enabled: !!address,
+  });
+
+  // ✅ NEW: Fetch Stream A income breakdown per rank
+  const { data: mynnGiftIncomeBreakdownA } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserIncomeBreakdown_StreamA',
+    args: [address],
+    enabled: !!address,
+  });
+
+  // ✅ NEW: Fetch Stream B income breakdown per rank
+  const { data: mynnGiftIncomeBreakdownB } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getUserIncomeBreakdown_StreamB',
+    args: [address],
+    enabled: !!address,
+  });
+
   // Fetch NobleGift waiting queue for the user's current rank
   const { data: nobleGiftWaitingQueue, isLoading: nobleGiftWaitingQueueLoading, error: nobleGiftWaitingQueueError, refetch: refetchNobleGiftWaitingQueue } = useReadContract({
     ...mynngiftConfig,
@@ -1097,21 +1148,8 @@ useEffect(() => {
     ...mynncryptConfig,
     functionName: 'getIncome',
     args: userId !== undefined && userId !== null ? [userId] : undefined,
-    enabled: !!userId && !!userInfo,
-    watch: true,
-    onSuccess: (data) => {
-      console.log('✅ SUCCESS: Income history received from contract');
-      console.log('   Data length:', Array.isArray(data) ? data.length : 'not array');
-      console.log('   Raw data:', data);
-      if (Array.isArray(data)) {
-        data.forEach((entry, idx) => {
-          console.log(`   Entry ${idx}: layer=${entry.layer}, amount=${entry.amount}, id=${entry.id}, time=${entry.time}`);
-        });
-      }
-    },
-    onError: (error) => {
-      console.error('❌ Error fetching income history:', error);
-    }
+    enabled: !!userId, // ✅ FIXED: Only need userId, userInfo is not needed for getIncome
+    watch: true
   });
 
   // Fetch level income breakdown
@@ -1120,7 +1158,7 @@ useEffect(() => {
     ...mynncryptConfig,
     functionName: 'getLevelIncome',
     args: userId !== undefined && userId !== null ? [userId] : undefined,
-    enabled: !!userId && !!userInfo,
+    enabled: !!userId, // ✅ FIXED: Only need userId, userInfo is not needed
   });
 
   // Fetch next level cost
@@ -1134,69 +1172,58 @@ useEffect(() => {
   // Process income history data with enhanced error handling and real-time updates
   useEffect(() => {
     console.log('� Income History useEffect running');
-    console.log('📊 incomeHistoryRaw:', incomeHistoryRaw);
-    console.log('   Is array?', Array.isArray(incomeHistoryRaw));
-    console.log('   Length:', Array.isArray(incomeHistoryRaw) ? incomeHistoryRaw.length : 'N/A');
-    console.log('   userId:', userId);
-    
     if (incomeHistoryRaw && Array.isArray(incomeHistoryRaw)) {
       try {
         const processedHistory = incomeHistoryRaw.map((income, idx) => {
           if (!income) return null;
           
-          console.log(`📝 Processing income entry ${idx}:`, income);
-          console.log(`   Raw values: layer=${income.layer}, id=${income.id}, amount=${income.amount}, time=${income.time}`);
-          
-          const layer = Number(income.layer ?? income.level ?? income.userLevel ?? 0);
+          const layer = Number(income.layer ?? 0);
           const senderId = income.id?.toString() || '';
-          const receiverId = income.receiverId?.toString() || income.to?.toString() || userId?.toString() || '';
           
-          console.log(`   Parsed: Layer: ${layer}, SenderId: ${senderId}, ReceiverId: ${receiverId}`);
+          // Convert amount to ether for logging
+          const amountInEther = income.amount ? ethers.formatEther(income.amount?.toString() || '0') : '0';
           
           // FILTER: Exclude MynnGift deposits (layers 4 and 8 = pengeluaran, bukan income)
           // MynnGift deposits are recorded with layer 4 (Level 4 upgrade) or layer 8 (Level 8 upgrade)
           // These are EXPENSES, not income - should NOT appear in income history
           // Only referral (0), sponsor (1), upline (10+), and royalty should be shown
           if (layer === 4 || layer === 8) {
-            console.log(`  ✅ Filtering out MynnGift deposit (layer ${layer}, amount ${amountInEther} = EXPENSE)`);
             return null; // Skip MynnGift deposits from income history
           }
           
           if (layer >= 2 && layer <= 9 && senderId === receiverId) {
-            console.log(`  ✅ Filtering out other MynnGift deposit (level ${layer}, self-referential)`);
             return null; // Skip other MynnGift entries
           }
           
           // Determine income type based on layer
           const incomeType = ((lyr) => {
               if (lyr === 0) {
-                console.log(`  → Mapped to REFERRAL`);
                 return IncomeType.REFERRAL;
               }
               if (lyr === 1) {
-                console.log(`  → Mapped to SPONSOR`);
                 return IncomeType.SPONSOR;
               }
               if (lyr === 4) {
-                console.log(`  → Mapped to ROYALTY ✅ (layer 4 after MynnGift filtered)`);
-                return IncomeType.ROYALTY;  // Layer 4 remaining = Royalty (MynnGift already filtered)
-              }
-              if (lyr === 11) {
-                console.log(`  → Mapped to ROYALTY (layer 11)`);
                 return IncomeType.ROYALTY;
               }
-              if (lyr >= 10 && lyr < 11) {
-                console.log(`  → Mapped to UPLINE`);
+              if (lyr === 11) {
+                return IncomeType.ROYALTY;
+              }
+              // ✅ FIXED: Any layer >= 10 (except 11) is UPLINE income from level upgrades
+              // Layer 10 = Level 1 upline, Layer 12 = Level 2 upline, etc.
+              if (lyr >= 10) {
+                console.log(`  → Mapped to UPLINE (layer ${lyr} = level ${lyr - 10 + 1} upline income)`);
                 return IncomeType.UPLINE;
               }
-              // Fallback for types not explicitly mapped
-              console.log(`  → Mapped to REFERRAL (fallback)`);
+              // Fallback for types not explicitly mapped (shouldn't happen)
+              console.log(`  → Mapped to REFERRAL (fallback for layer ${lyr})`);
               return IncomeType.REFERRAL; 
           })(layer);
 
           const senderIdFromContract = income.id?.toString() || '';
-          // Ambil receiverId dari data income, jangan selalu userId dashboard
-          const receiverIdFromContract = income.receiverId?.toString() || income.to?.toString() || userId?.toString() || '';
+          // ✅ FIXED: Contract Income struct hanya punya: id, layer, amount, time
+          // Tidak punya receiverId - kita gunakan userId dari context
+          const receiverIdFromContract = userId?.toString() || '';
 
           // Construct the new income object with explicit fields
           const newIncomeObj = {
@@ -1204,17 +1231,13 @@ useEffect(() => {
             receiverId: receiverIdFromContract,
             incomeType: incomeType,
             amount: ethers.formatEther(income.amount?.toString() || '0'),
-            timestamp: Number(income.timestamp || income.time || 0) * 1000, // Convert to JS timestamp (milliseconds)
-            layer: Number(income.layer ?? income.level ?? income.userLevel ?? 0)
+            // ✅ Contract uses 'time' (unix seconds), convert to milliseconds
+            timestamp: (Number(income.time || 0) * 1000),
+            layer: Number(income.layer ?? 0)
           };
           
           // Special logging for royalty and large amounts
-          if (layer === 4 || parseFloat(newIncomeObj.amount) >= 0.0001) {
-            console.log(`   💰 Amount ${newIncomeObj.amount} opBNB, Layer ${layer}, Type: ${newIncomeObj.incomeType}`);
-            console.log(`   ✅ Final: ${newIncomeObj.incomeType === 4 ? 'ROYALTY' : 'OTHER'}`);
-          }
           
-          console.log('✅ Processed income entry:', newIncomeObj);
           return newIncomeObj;
         }).filter(Boolean); // Remove null entries
         
@@ -1260,28 +1283,18 @@ useEffect(() => {
         console.log('Processed and Combined Income History:', combinedHistory);
         setIncomeHistory(combinedHistory); // Set the combined, unique, and sorted history
       } catch (error) {
-        console.error('Error processing income history:', error);
-        console.error('Income entry that caused error:', incomeHistoryRaw);
         setIncomeHistory([]);
       }
     } else {
-      console.log('No income history data available');
       setIncomeHistory([]);
     }
-  }, [incomeHistoryRaw, userId, incomeHistory]); // Add userId to dependencies to ensure consistent receiverId.
-
-  // Add debug logging for income history data
-  useEffect(() => {
-    console.log('Current Income History State:', incomeHistory);
-  }, [incomeHistory]);
+  }, [incomeHistoryRaw, userId]);
 
   // Process level income breakdown with proper error handling
   useEffect(() => {
-    console.log('Level Income Breakdown Raw:', levelIncomeBreakdownRaw);
     if (levelIncomeBreakdownRaw && Array.isArray(levelIncomeBreakdownRaw)) {
       try {
         const processedBreakdown = Array.from(levelIncomeBreakdownRaw).map((amount, index) => {
-          console.log('Processing level income:', index + 1, amount);
           return {
             level: index + 1,
             amount: amount ? ethers.formatEther(amount.toString()) : '0',
@@ -1851,7 +1864,12 @@ useEffect(() => {
   }, []);
 
   const handleCopyLink = useCallback(() => {
-    const referralLink = `https://project-mc-tan.vercel.app/register?ref=${userId}`;
+    // Detect environment - support localhost for testing
+    const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? `http://${window.location.hostname}:${window.location.port}`
+      : 'https://project-mc-tan.vercel.app';
+    
+    const referralLink = `${baseUrl}/register?ref=${userId}`;
     navigator.clipboard.writeText(referralLink).then(() => {
       toast.success('Referral link copied to clipboard!');
     }).catch((err) => {
@@ -1934,22 +1952,7 @@ useEffect(() => {
       .reduce((sum, income) => sum + parseFloat(income.amount || 0), 0);
   }, [incomeHistory]);
 
-  // Update calculateTotalIncome to use the same sources as the breakdown
-  const calculateTotalIncome = useMemo(() => {
-    // Use the same calculation as the breakdown: referral, sponsor, upline, royalty
-    const referral = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[0])) : 0; // Use contract's referral income
-    const upline = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[1])) : 0;
-    const sponsor = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[2])) : 0; // Use contract's sponsor income
-    const pendingRoyalty = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[4])) : 0;
-    
-    // ✅ FIX: Include both claimed royalty (from history) and pending royalty
-    // This way totalIncome stays same after claim (claimed stays in history)
-    const totalRoyalty = claimedRoyalty + pendingRoyalty;
-    
-    return (referral + sponsor + upline + totalRoyalty).toFixed(4);
-  }, [incomeBreakdown, claimedRoyalty]); // Add claimedRoyalty to dependencies
-
-  // Fetch MynnGift income breakdown for all ranks
+  // ✅ FIRST: Fetch MynnGift income breakdown for all ranks (MOVED UP before calculateTotalIncome)
   const { data: mynngiftIncomeBreakdown } = useReadContract({
     ...mynngiftConfig,
     functionName: 'getUserIncomeBreakdown',
@@ -1957,7 +1960,7 @@ useEffect(() => {
     enabled: !!address,
   });
 
-  // Memoize MynnGift income breakdown (array per rank 1-8)
+  // ✅ Memoize MynnGift income breakdown (array per rank 1-8) (MOVED UP)
   const mynngiftIncomePerRank = useMemo(() => {
     if (!mynngiftIncomeBreakdown || !Array.isArray(mynngiftIncomeBreakdown)) return [];
     return mynngiftIncomeBreakdown.map((amount, idx) => ({
@@ -1966,11 +1969,28 @@ useEffect(() => {
     }));
   }, [mynngiftIncomeBreakdown]);
 
-  // Calculate total MynnGift income
+  // ✅ Calculate total MynnGift income (MOVED UP before calculateTotalIncome)
   const totalMynngiftIncome = useMemo(() => {
     if (!mynngiftIncomePerRank.length) return 0;
     return mynngiftIncomePerRank.reduce((sum, item) => sum + parseFloat(item.amount), 0);
   }, [mynngiftIncomePerRank]);
+
+  // Update calculateTotalIncome to use the same sources as the breakdown
+  const calculateTotalIncome = useMemo(() => {
+    // Use the same calculation as the breakdown: referral, sponsor, upline, royalty
+    const referral = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[0])) : 0; // Use contract's referral income
+    const upline = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[1])) : 0;
+    const sponsor = incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[2])) : 0; // Use contract's sponsor income
+    
+    // ✅ OPTION B: Only include CLAIMED royalty in total income (from history layer 11)
+    // Pending/claimable royalty is NOT included in total until it's claimed
+    const totalRoyalty = claimedRoyalty;
+    
+    // ✅ NEW: Include MynnGift income (Stream A and B combined)
+    const mynngiftTotal = totalMynngiftIncome || 0;
+    
+    return (referral + sponsor + upline + totalRoyalty + mynngiftTotal).toFixed(4);
+  }, [incomeBreakdown, claimedRoyalty, totalMynngiftIncome]); // ✅ Add totalMynngiftIncome to dependencies
 
   // Get user level to determine stream eligibility
   const userLevel = userInfo ? userInfo.level : 0;
@@ -1987,7 +2007,7 @@ useEffect(() => {
           <div className="flex flex-col space-y-2">
             <span className="income-title">Referral Income</span>
             <span className="income-value text-xl">
-              {incomeBreakdown && incomeBreakdown[0] ? ethers.formatEther(incomeBreakdown[0]) : '0.0000'} opBNB
+              {incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[0])).toFixed(4) : '0.0000'} opBNB
             </span>
             <span className="text-xs text-gray-400">
               91% from direct referral member registration fees
@@ -1999,7 +2019,7 @@ useEffect(() => {
           <div className="flex flex-col space-y-2">
             <span className="income-title">Upline Income</span>
             <span className="income-value text-xl">
-              {incomeBreakdown ? ethers.formatEther(incomeBreakdown[1]) : '0'} opBNB
+              {incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[1])).toFixed(4) : '0.0000'} opBNB
             </span>
             <span className="text-xs text-gray-400">
               Income from upline network (matrix upgrades)
@@ -2011,7 +2031,7 @@ useEffect(() => {
           <div className="flex flex-col space-y-2">
             <span className="income-title">Sponsor Income</span>
             <span className="income-value text-xl">
-              {totalSponsor.toFixed(4)} opBNB
+              {incomeBreakdown ? parseFloat(ethers.formatEther(incomeBreakdown[2])).toFixed(4) : '0.0000'} opBNB
             </span>
             <span className="text-xs text-gray-400">
               Sponsor income (10% bonus from downline matrix upgrades, excluding direct referral)
@@ -2023,61 +2043,13 @@ useEffect(() => {
           <div className="flex flex-col space-y-2">
             <span className="income-title">Royalty Income</span>
             <span className="income-value text-xl">
-              {incomeBreakdown ? ethers.formatEther(incomeBreakdown[4]) : '0'} opBNB
+              {claimedRoyalty.toFixed(4)} opBNB
             </span>
             <span className="text-xs text-gray-400">
-              Royalty income from network
+              Royalty income claimed from network
             </span>
           </div>
         </div>
-        
-        {/* MynnGift Stream A Income (Level 4) */}
-        {isEligibleForStreamA && (
-          <div className="futuristic-card p-4">
-            <div className="flex flex-col space-y-2">
-              <span className="income-title">MynnGift Stream A Income</span>
-              <span className="income-value text-xl">
-                {totalMynngiftIncome.toFixed(4)} opBNB
-              </span>
-              <span className="text-xs text-gray-400">
-                Total income from MynnGift (Rank 1-8)
-              </span>
-              {/* Breakdown per rank MynnGift Stream A */}
-              <div className="mt-2">
-                {mynngiftIncomePerRank.length > 0 ? (
-                  <div className="space-y-1">
-                    {mynngiftIncomePerRank.map(item => (
-                      <div key={`streamA-rank-${item.rank}`} className="flex justify-between text-xs text-gray-300">
-                        <span>Rank {item.rank}</span>
-                        <span>{parseFloat(item.amount).toFixed(4)} opBNB</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-500">No MynnGift income yet</span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MynnGift Stream B Income (Level 8) - Future placeholder for dual stream */}
-        {isEligibleForStreamB && (
-          <div className="futuristic-card p-4 opacity-75">
-            <div className="flex flex-col space-y-2">
-              <span className="income-title">MynnGift Stream B Income</span>
-              <span className="income-value text-xl text-gray-400">
-                0.0000 opBNB
-              </span>
-              <span className="text-xs text-gray-400">
-                Dual stream independent income
-              </span>
-              <div className="mt-2">
-                <span className="text-xs text-gray-500">Fitur dual stream akan segera aktif</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -2363,68 +2335,9 @@ useEffect(() => {
     setCurrentPage(pageNumber);
   }, []);
 
-  // DEBUG PANEL - Visual Debug Info
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
-
   // Income History Table Component
   const IncomeHistoryTable = () => (
     <div className="bg-[#1A3A6A] w-full max-w-full p-3 sm:p-6 rounded-lg shadow-lg">
-      {/* DEBUG PANEL */}
-      <div className="mb-4">
-        <button 
-          onClick={() => setShowDebugPanel(!showDebugPanel)}
-          className="text-xs px-3 py-1 bg-[#102E50] text-[#4DA8DA] rounded border border-[#4DA8DA]/30 hover:bg-[#4DA8DA]/20"
-        >
-          {showDebugPanel ? '❌ Hide' : '🔍'} Debug Info
-        </button>
-        {showDebugPanel && (
-          <div className="mt-3 bg-[#102E50] border border-[#4DA8DA]/50 rounded text-xs font-mono text-[#4DA8DA] w-full">
-            <div className="p-4">
-              <div>📊 <strong>Income History Debug Info</strong></div>
-              <div>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-              <div>✓ userId: {userId || 'NOT SET'}</div>
-              <div>✓ Loading: {incomeHistoryLoading ? 'YES' : 'NO'}</div>
-              <div>✓ Error: {incomeHistoryError ? incomeHistoryError.message : 'NONE'}</div>
-              <div>✓ incomeHistoryRaw: {incomeHistoryRaw ? (Array.isArray(incomeHistoryRaw) ? `Array(${incomeHistoryRaw.length})` : typeof incomeHistoryRaw) : 'undefined'}</div>
-              <div>✓ Processed History: {incomeHistory ? `${incomeHistory.length} items` : 'undefined'}</div>
-              <div className="mt-2">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-              <div><strong>Raw Contract Data (incomeHistoryRaw):</strong></div>
-            </div>
-            <div style={{maxHeight: '600px', overflowY: 'auto', paddingLeft: '1rem', paddingRight: '1rem', paddingBottom: '1rem'}}>
-              {incomeHistoryRaw && Array.isArray(incomeHistoryRaw) ? (
-                <div>
-                  {incomeHistoryRaw.map((entry, idx) => {
-                    const amountInBnb = entry.amount ? (Number(entry.amount) / 1e18).toFixed(6) : 'undefined';
-                    const layerNum = entry.layer ? Number(entry.layer) : undefined;
-                    let layerName = '';
-                    if (layerNum === 0) layerName = ' (Referral)';
-                    else if (layerNum === 1) layerName = ' (Sponsor)';
-                    else if (layerNum === 4) layerName = ' (MynnGift Level 4 DEPOSIT)';
-                    else if (layerNum === 8) layerName = ' (MynnGift Level 8 DEPOSIT)';
-                    else if (layerNum === 11) layerName = ' (Royalty Claim!)';
-                    else if (layerNum >= 2 && layerNum <= 9) layerName = ` (MynnGift Level ${layerNum})`;
-                    else if (layerNum >= 10 && layerNum < 11) layerName = ' (Upline)';
-                    else if (layerNum === undefined) layerName = ' (Referral - no layer)';
-                    
-                    return (
-                      <div key={idx} className="mt-2 p-2 bg-[#0A1E2E] rounded border border-[#4DA8DA]/20">
-                        <div><strong>Entry {idx}:</strong></div>
-                        <div>  layer: {layerNum}{layerName}</div>
-                        <div>  amount: {amountInBnb} opBNB</div>
-                        <div>  id: {entry.id || 'undefined'}</div>
-                        <div>  time: {entry.time ? new Date(Number(entry.time) * 1000).toLocaleString() : 'undefined'}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-red-400">No array data</div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mb-4">
         <h3 className="text-xl font-semibold text-[#F5C45E]">Income History</h3>
         <select 
@@ -2827,7 +2740,12 @@ useEffect(() => {
                           </a>
                         </li>
                         <li>
-                          <a href={`https://wa.me/?text=Join%20Smart%20Mynncrypt%20Community%20using%20my%20referral%20link:%20https://project-mc-tan.vercel.app/register?ref=${userId}`} target="_blank" rel="noopener noreferrer">
+                          <a href={(() => {
+                            const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                              ? `http://${window.location.hostname}:${window.location.port}`
+                              : 'https://project-mc-tan.vercel.app';
+                            return `https://wa.me/?text=Join%20Smart%20Mynncrypt%20Community%20using%20my%20referral%20link:%20${encodeURIComponent(baseUrl)}/register?ref=${userId}`;
+                          })()} target="_blank" rel="noopener noreferrer">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M17.6 6.31999C16.8669 5.58141 15.9943 4.99596 15.033 4.59767C14.0716 4.19938 13.0406 3.99622 12 3.99999C10.6089 4.00135 9.24248 4.36819 8.03771 5.06377C6.83294 5.75935 5.83208 6.75926 5.13534 7.96335C4.4386 9.16745 4.07046 10.5335 4.06776 11.9246C4.06507  13.3158 4.42793 14.6832 5.12 15.89L4 20L8.2 18.9C9.35975 19.5452 10.6629 19.8891 11.99 19.9C14.0997 19.9001 16.124 19.0668 17.6222 17.5816C19.1205 16.0965 19.9715 14.0796 19.99 11.97C19.983 10.9173 19.7682 9.87634 19.3581 8.9068C18.948 7.93725 18.3505 7.05819 17.6 6.31999ZM12 18.53C10.8177 18.5308 9.65701 18.2242 8.64 17.64L8.4 17.48L5.91 18.12L6.57 15.69L6.39 15.44C5.75186 14.3662 5.41702 13.1302 5.41702 11.87C5.41702 10.6098 5.75186 9.37377 6.39 8.29999C7.37359 6.66339 9.01574 5.58769 10.8679 5.33642C12.72 5.08515 14.5895 5.68458 16.0137 6.99449C17.4379 8.30439 18.2834 10.1995 18.34 12.19C18.3327 13.9182 17.6359 15.5725 16.3812 16.8186C15.1265 18.0648 13.4681 18.7501 11.74 18.75L12 18.53ZM15.41 13.22C15.2813 13.1461 15.1432 13.0925 15 13.06C14.8567 13.0276 14.7093 13.0116 14.561 13.0125C14.4126 13.0134 14.2654 13.0312 14.1225 13.0654C13.9796 13.0997 13.8427 13.15 13.716 13.2147C13.5893 13.2795 13.4743 13.3579 13.3749 13.4473C13.2755 13.5368 13.1929 13.6362 13.1301 13.7422C13.0673 13.8482 13.0251 13.9595 13.0048 14.0741C12.9846 14.1886 12.9865 14.3048 13.01 14.42C13.0094 14.4924 13.0192 14.5645 13.0391 14.6338C13.059 14.703 13.0887 14.7686 13.1272 14.8282C13.1657 14.8879 13.2124 14.9409 13.2655 14.9852C13.3186 15.0296 13.3775 15.0647 13.44 15.09C13.6 15.16 13.89 15.26 14.37 15.45C14.8309 15.6264 15.2785 15.8437 15.71 16.1C16.0992 16.3194 16.4584 16.5871 16.78 16.897C17.0256 17.1389 17.2025 17.4358 17.2957 17.7601C17.3889 18.0843 17.3956 18.4262 17.3152 18.7537C17.2348 19.0812 17.0697 19.3838 16.834 19.6346C16.5983 19.8854 16.2989 20.0771 15.9625 20.1933C15.6261 20.3095 15.2633 20.3468 14.91 20.3017C14.5567 20.2567 14.2232 20.1307 13.94 19.936C13.6159 19.7136 13.3358 19.4311 13.1158 19.1035C12.8958 18.7759 12.7399 18.4093 12.66 18.0239C12.5801 17.6385 12.5778 17.2417 12.6532 16.8553C12.7286 16.4689 12.8803 16.1003 13.0966 15.7699C13.313 15.4396 13.5901 15.1534 13.9118 14.9267C14.2336 14.7001 14.5941 14.5374 14.9751 14.4478C15.3561 14.3582 15.7504 14.3434 16.1371 14.4043C16.5237 14.4652 16.8952 14.6007 17.23 14.8039C17.5648 15.0072 17.8573 15.2742 18.09 15.59C18.1753 15.7139 18.2191 15.8592 18.2161 16.0071C18.2131 16.155 18.1635 16.2984 18.0736 16.4184C17.9837 16.5384 17.8576 16.6296 17.7125 16.6804C17.5674 16.7312 17.4099 16.7393 17.26 16.704L15.41 13.22Z" fill="currentColor"/>
                             </svg>
@@ -2877,17 +2795,25 @@ useEffect(() => {
     <div className="absolute left-0 right-0 mt-1 bg-[#102E50] border border-[#4DA8DA]/30 rounded shadow-lg z-50 max-h-60 overflow-auto">
       {Array.from({ length: 12 - (userInfo?.level || 0) }).map((_, index) => {
         const levelOption = (userInfo?.level || 0) + index + 1;
+        const isNextLevelOnly = levelOption === (userInfo?.level || 0) + 1; // Only next level is enabled
+        
         if (levelOption > 12) return null;
         return (
           <div
             key={levelOption}
-            className={`px-4 py-2 cursor-pointer hover:bg-[#4DA8DA] hover:text-[#102E50] ${selectedUpgradeLevel === levelOption ? 'bg-[#4DA8DA] text-[#102E50]' : 'text-[#F5C45E]'}`}
+            className={`px-4 py-2 ${
+              isNextLevelOnly 
+                ? 'cursor-pointer hover:bg-[#4DA8DA] hover:text-[#102E50] text-[#F5C45E]' 
+                : 'cursor-not-allowed opacity-40 text-gray-500'
+            } ${selectedUpgradeLevel === levelOption ? 'bg-[#4DA8DA] text-[#102E50]' : ''}`}
             onClick={() => {
-              setSelectedUpgradeLevel(levelOption);
-              setIsLevelDropdownOpen(false);
+              if (isNextLevelOnly) {
+                setSelectedUpgradeLevel(levelOption);
+                setIsLevelDropdownOpen(false);
+              }
             }}
           >
-            Level {levelOption}
+            Level {levelOption} {!isNextLevelOnly && '(complete level ' + (levelOption - 1) + ' first)'}
           </div>
         );
       })}
@@ -2940,16 +2866,105 @@ useEffect(() => {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Total Donation:</span>
-                    <span className="font-semibold text-[#F5C45E]">
-                      {nobleGiftTotalDonation !== undefined ? `${ethers.formatEther(nobleGiftTotalDonation)} opBNB` : 'Loading...'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
                     <span>Total Income:</span>
                     <span className="font-semibold text-[#F5C45E]">
                       {nobleGiftTotalIncome !== undefined ? `${ethers.formatEther(nobleGiftTotalIncome)} opBNB` : 'Loading...'}
                     </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4: MynnGift Income Stream A & B */}
+              <div className="bg-[#1A3A6A] w-full max-w-full p-3 sm:p-6 rounded-lg shadow-lg">
+                <h2 className="text-xl font-semibold text-[#F5C45E] mb-4">📊 Income Streams</h2>
+                <div className="space-y-4">
+                  {/* Stream A: Level 4 */}
+                  <div className="bg-[#0A1E2E] rounded-lg p-4 border border-blue-500/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-blue-400">Stream A (Level 4)</span>
+                      <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">0.0081 opBNB entry</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300">Total Income:</span>
+                      <span className="font-semibold text-white">
+                        {mynnGiftIncomeStreamA !== undefined ? `${ethers.formatEther(mynnGiftIncomeStreamA)} opBNB` : 'Loading...'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-gray-300">Current Rank:</span>
+                      <span className="font-semibold text-blue-300">
+                        {mynnGiftRankStreamA !== undefined && mynnGiftRankStreamA !== null ? `Rank ${Number(mynnGiftRankStreamA)}` : 'Not Active'}
+                      </span>
+                    </div>
+                    {/* Stream A breakdown */}
+                    {mynnGiftIncomeBreakdownA && mynnGiftIncomeBreakdownA.length > 0 && (
+                      <div className="mt-2 text-xs text-gray-400 space-y-1">
+                        <div className="font-semibold text-blue-300">Per-Rank Income:</div>
+                        <div className="grid grid-cols-4 gap-1">
+                          {mynnGiftIncomeBreakdownA.map((income, idx) => {
+                            const rank = idx + 1;
+                            const incomeAmount = Number(income) / 1e18;
+                            return incomeAmount > 0 ? (
+                              <div key={rank} className="bg-blue-500/10 px-2 py-1 rounded text-center">
+                                <div className="font-semibold text-blue-300">R{rank}</div>
+                                <div className="text-blue-200">{incomeAmount.toFixed(4)}</div>
+                              </div>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stream B: Level 8 */}
+                  <div className="bg-[#0A1E2E] rounded-lg p-4 border border-purple-500/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-purple-400">Stream B (Level 8)</span>
+                      <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">0.0936 opBNB entry</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300">Total Income:</span>
+                      <span className="font-semibold text-white">
+                        {mynnGiftIncomeStreamB !== undefined ? `${ethers.formatEther(mynnGiftIncomeStreamB)} opBNB` : 'Loading...'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-gray-300">Current Rank:</span>
+                      <span className="font-semibold text-purple-300">
+                        {mynnGiftRankStreamB !== undefined && mynnGiftRankStreamB !== null ? `Rank ${Number(mynnGiftRankStreamB)}` : 'Not Active'}
+                      </span>
+                    </div>
+                    {/* Stream B breakdown */}
+                    {mynnGiftIncomeBreakdownB && mynnGiftIncomeBreakdownB.length > 0 && (
+                      <div className="mt-2 text-xs text-gray-400 space-y-1">
+                        <div className="font-semibold text-purple-300">Per-Rank Income:</div>
+                        <div className="grid grid-cols-4 gap-1">
+                          {mynnGiftIncomeBreakdownB.map((income, idx) => {
+                            const rank = idx + 1;
+                            const incomeAmount = Number(income) / 1e18;
+                            return incomeAmount > 0 ? (
+                              <div key={rank} className="bg-purple-500/10 px-2 py-1 rounded text-center">
+                                <div className="font-semibold text-purple-300">R{rank}</div>
+                                <div className="text-purple-200">{incomeAmount.toFixed(4)}</div>
+                              </div>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Combined Total */}
+                  <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-4 border border-yellow-500/30">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-yellow-400">Combined MynnGift Income:</span>
+                      <span className="text-2xl font-bold text-[#F5C45E]">
+                        {mynnGiftIncomeStreamA !== undefined && mynnGiftIncomeStreamB !== undefined 
+                          ? ethers.formatEther(BigInt(mynnGiftIncomeStreamA) + BigInt(mynnGiftIncomeStreamB))
+                          : 'Loading...'}
+                        {' opBNB'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3405,7 +3420,12 @@ useEffect(() => {
               </h3>
               <input
                 type="text"
-                value={`https://project-mc-tan.vercel.app/register?ref=${userId}`}
+                value={(() => {
+                  const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? `http://${window.location.hostname}:${window.location.port}`
+                    : 'https://project-mc-tan.vercel.app';
+                  return `${baseUrl}/register?ref=${userId}`;
+                })()}
                 readOnly
                 style={{
                   width: '100%',

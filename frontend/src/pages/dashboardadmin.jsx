@@ -763,7 +763,25 @@ const FinanceSection = ({ mynncryptConfig, mynngiftConfig, opbnbPriceUSD, opbnbP
 
   const { data: mynngiftPlatformIncome } = useReadContract({
     ...mynngiftConfig,
-    functionName: 'getPlatformIncome',
+    functionName: 'platformIncome',
+  });
+
+  // ✅ NEW: Fetch MynnGift promotion pool
+  const { data: mynngiftPromotionPool } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'promotionPool',
+  });
+
+  // ✅ NEW: Fetch MynnGift Stream A platform income
+  const { data: mynngiftPlatformIncomeStreamA } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getPlatformIncome_StreamA',
+  });
+
+  // ✅ NEW: Fetch MynnGift Stream B platform income
+  const { data: mynngiftPlatformIncomeStreamB } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'getPlatformIncome_StreamB',
   });
 
   // Write functions for Findup
@@ -850,6 +868,18 @@ const FinanceSection = ({ mynncryptConfig, mynngiftConfig, opbnbPriceUSD, opbnbP
           <div className={cardClass}>
             <h3 className="luxury-title text-[#F5C45E]">Pendapatan Platform (MynnGift) Konversi</h3>
             <p>{mynngiftPlatformIncome !== undefined ? renderWithKurs(formatEther(mynngiftPlatformIncome), opbnbPriceUSD, opbnbPriceIDR, isPriceLoading, priceError) : 'Loading...'}</p>
+          </div>
+          <div className={cardClass}>
+            <h3 className="luxury-title text-[#F5C45E]">Saldo Promotion Pool (MynnGift)</h3>
+            <p>{mynngiftPromotionPool !== undefined ? renderWithKurs(formatEther(mynngiftPromotionPool), opbnbPriceUSD, opbnbPriceIDR, isPriceLoading, priceError) : 'Loading...'}</p>
+          </div>
+          <div className={cardClass}>
+            <h3 className="luxury-title text-[#4DA8DA]">Platform Income Stream A</h3>
+            <p>{mynngiftPlatformIncomeStreamA !== undefined ? renderWithKurs(formatEther(mynngiftPlatformIncomeStreamA), opbnbPriceUSD, opbnbPriceIDR, isPriceLoading, priceError) : 'Loading...'}</p>
+          </div>
+          <div className={cardClass}>
+            <h3 className="luxury-title text-[#E78B48]">Platform Income Stream B</h3>
+            <p>{mynngiftPlatformIncomeStreamB !== undefined ? renderWithKurs(formatEther(mynngiftPlatformIncomeStreamB), opbnbPriceUSD, opbnbPriceIDR, isPriceLoading, priceError) : 'Loading...'}</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">

@@ -636,15 +636,15 @@ const NobleGiftVisualization = ({ mynngiftConfig, userAddress, streamType, strea
         {/* Status Row */}
         <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-4">
           <div className="text-center sm:text-left">
-            <p className="text-gray-400 text-sm mb-1">Status Anda</p>
-            <p className="text-lg font-semibold text-[#4DA8DA]">{nobleGiftStatus || 'Memuat...'}</p>
+            <p className="text-gray-400 text-sm mb-1">Your Status</p>
+            <p className="text-lg font-semibold text-[#4DA8DA]">{nobleGiftStatus || 'Loading...'}</p>
           </div>
           <div className="text-center">
-            <p className="text-gray-400 text-sm mb-1">Rank Anda</p>
-            <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank ? `${getNobleGiftRankName(Number(nobleGiftRank))} (Rank ${nobleGiftRank})` : 'Memuat...'}</p>
+            <p className="text-gray-400 text-sm mb-1">Your Rank</p>
+            <p className="text-lg font-semibold text-[#F5C45E]">{nobleGiftRank ? `${getNobleGiftRankName(Number(nobleGiftRank))} (Rank ${nobleGiftRank})` : 'Loading...'}</p>
           </div>
           <div className="text-center sm:text-right">
-            <p className="text-gray-400 text-sm mb-1">Antrian</p>
+            <p className="text-gray-400 text-sm mb-1">Queue Position</p>
             <p className="text-lg font-semibold text-[#FFD700]">{queuePosition && Number(queuePosition) > 0 ? `#${Number(queuePosition)}` : 'n/a'}</p>
           </div>
         </div>

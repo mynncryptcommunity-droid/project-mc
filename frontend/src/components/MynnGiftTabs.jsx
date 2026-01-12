@@ -30,6 +30,28 @@ const MynnGiftTabs = ({ mynngiftConfig, mynncryptConfig }) => {
     query: { enabled: !!userAddress },
   });
 
+  // Stream B data
+  const { data: nobleGiftRankB, isLoading: rankBLoading, error: rankBError } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'userRank_StreamB',
+    args: [userAddress],
+    query: { enabled: !!userAddress },
+  });
+
+  const { data: userTotalIncomeB, isLoading: incomeBLoading, error: incomeBError } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'userTotalIncome_StreamB',
+    args: [userAddress],
+    query: { enabled: !!userAddress },
+  });
+
+  const { data: userTotalDonationB, isLoading: donationBLoading, error: donationBError } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'userTotalDonation_StreamB',
+    args: [userAddress],
+    query: { enabled: !!userAddress },
+  });
+
   // First, get the userId from the address
   const { data: userId } = useReadContract({
     ...mynncryptConfig,
@@ -64,6 +86,20 @@ const MynnGiftTabs = ({ mynngiftConfig, mynncryptConfig }) => {
     query: { enabled: !!userAddress },
   });
 
+  const { data: isDonorDataB } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'isDonor_StreamB',
+    args: [userAddress],
+    query: { enabled: !!userAddress },
+  });
+
+  const { data: isReceiverDataB } = useReadContract({
+    ...mynngiftConfig,
+    functionName: 'isReceiver_StreamB',
+    args: [userAddress],
+    query: { enabled: !!userAddress },
+  });
+
   const isActiveInMynnGift = isReceiverData || isDonorData;
 
   // Determine which streams user is eligible for
@@ -78,18 +114,17 @@ const MynnGiftTabs = ({ mynngiftConfig, mynncryptConfig }) => {
       console.log('User Level Status:', { levelLoading, levelError: levelError?.message || 'none', userLevel: userLevel ? Number(userLevel) : 'undefined' });
       console.log('Is Active in MynnGift:', isActiveInMynnGift, '(isReceiver:', isReceiverData, ', isDonor:', isDonorData, ')');
       console.log('Stream Eligibility:', { isEligibleForStreamA, isEligibleForStreamB });
-      console.log('MynnGift Data:');
+      console.log('MynnGift Stream A Data:');
       console.log('  - Rank:', nobleGiftRank ? Number(nobleGiftRank) : 'undefined');
-      console.log('  - Total Income:', userTotalIncome ? ethers.formatEther(userTotalIncome) : 'undefined', 'Wei');
-      console.log('  - Total Donation:', userTotalDonation ? ethers.formatEther(userTotalDonation) : 'undefined', 'Wei');
-      console.log('Loading States:');
-      console.log('  - rankLoading:', rankLoading, 'rankError:', rankError?.message || 'none');
-      console.log('  - incomeLoading:', incomeLoading, 'incomeError:', incomeError?.message || 'none');
-      console.log('  - donationLoading:', donationLoading, 'donationError:', donationError?.message || 'none');
-      console.log('  - levelLoading:', levelLoading, 'levelError:', levelError?.message || 'none');
+      console.log('  - Total Income:', userTotalIncome ? ethers.formatEther(userTotalIncome) : 'undefined', 'opBNB');
+      console.log('  - Total Donation:', userTotalDonation ? ethers.formatEther(userTotalDonation) : 'undefined', 'opBNB');
+      console.log('MynnGift Stream B Data:');
+      console.log('  - Rank:', nobleGiftRankB ? Number(nobleGiftRankB) : 'undefined');
+      console.log('  - Total Income:', userTotalIncomeB ? ethers.formatEther(userTotalIncomeB) : 'undefined', 'opBNB');
+      console.log('  - Total Donation:', userTotalDonationB ? ethers.formatEther(userTotalDonationB) : 'undefined', 'opBNB');
       console.log('=========================');
     }
-  }, [userAddress, nobleGiftRank, userTotalIncome, userTotalDonation, userLevel, isReceiverData, isDonorData, rankLoading, rankError, incomeLoading, incomeError, donationLoading, donationError, levelLoading, levelError, isEligibleForStreamA, isEligibleForStreamB]);
+  }, [userAddress, nobleGiftRank, userTotalIncome, userTotalDonation, nobleGiftRankB, userTotalIncomeB, userTotalDonationB, userLevel, isReceiverData, isDonorData, isDonorDataB, isReceiverDataB, rankLoading, rankError, incomeLoading, incomeError, donationLoading, donationError, rankBLoading, rankBError, incomeBLoading, incomeBError, donationBLoading, donationBError, levelLoading, levelError, isEligibleForStreamA, isEligibleForStreamB]);
 
   // Tab styling
   const tabBaseStyle = "px-4 py-3 rounded-lg transition-all duration-300 font-semibold";
@@ -142,9 +177,12 @@ const MynnGiftTabs = ({ mynngiftConfig, mynncryptConfig }) => {
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <OverviewTab
-            nobleGiftRank={nobleGiftRank}
-            userTotalIncome={userTotalIncome}
-            userTotalDonation={userTotalDonation}
+            nobleGiftRankA={nobleGiftRank}
+            nobleGiftRankB={nobleGiftRankB}
+            userTotalIncomeA={userTotalIncome}
+            userTotalIncomeB={userTotalIncomeB}
+            userTotalDonationA={userTotalDonation}
+            userTotalDonationB={userTotalDonationB}
             userLevel={userLevel}
             isEligibleForStreamA={isEligibleForStreamA}
             isEligibleForStreamB={isEligibleForStreamB}
@@ -216,9 +254,12 @@ const MynnGiftTabs = ({ mynngiftConfig, mynncryptConfig }) => {
  * OVERVIEW TAB - Dashboard showing both streams summary
  */
 const OverviewTab = ({
-  nobleGiftRank,
-  userTotalIncome,
-  userTotalDonation,
+  nobleGiftRankA,
+  nobleGiftRankB,
+  userTotalIncomeA,
+  userTotalIncomeB,
+  userTotalDonationA,
+  userTotalDonationB,
   userLevel,
   isEligibleForStreamA,
   isEligibleForStreamB,
@@ -266,9 +307,9 @@ const OverviewTab = ({
             title="Stream A"
             level="Level 4"
             subtitle="🏆 First MynnGift Stream"
-            rank={nobleGiftRank}
-            totalIncome={userTotalIncome}
-            totalDonation={userTotalDonation}
+            rank={nobleGiftRankA}
+            totalIncome={userTotalIncomeA}
+            totalDonation={userTotalDonationA}
             streamType="A"
           />
         )}
@@ -279,9 +320,9 @@ const OverviewTab = ({
             title="Stream B"
             level="Level 8"
             subtitle="🏆 Second MynnGift Stream"
-            rank={nobleGiftRank}
-            totalIncome={userTotalIncome}
-            totalDonation={userTotalDonation}
+            rank={nobleGiftRankB}
+            totalIncome={userTotalIncomeB}
+            totalDonation={userTotalDonationB}
             streamType="B"
           />
         )}
@@ -295,13 +336,11 @@ const OverviewTab = ({
             <div>
               <p className="text-gray-400 text-sm">Total Income</p>
               <p className="text-xl font-bold text-[#00FF88]">
-                {userTotalIncome !== undefined ? ethers.formatEther(userTotalIncome) : '0'} opBNB
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Total Donated</p>
-              <p className="text-xl font-bold text-[#F5C45E]">
-                {userTotalDonation !== undefined ? ethers.formatEther(userTotalDonation) : '0'} opBNB
+                {(() => {
+                  const incomeA = userTotalIncomeA ? parseFloat(ethers.formatEther(userTotalIncomeA)) : 0;
+                  const incomeB = userTotalIncomeB ? parseFloat(ethers.formatEther(userTotalIncomeB)) : 0;
+                  return (incomeA + incomeB).toFixed(4);
+                })()} opBNB
               </p>
             </div>
             <div>
@@ -356,12 +395,6 @@ const StreamStatusCard = ({
           <span className="text-gray-400">Total Income:</span>
           <span className="text-lg font-bold text-[#00FF88]">
             {totalIncome !== undefined ? ethers.formatEther(totalIncome) : '0'} opBNB
-          </span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-gray-400">Total Donated:</span>
-          <span className="text-lg font-bold text-[#F5C45E]">
-            {totalDonation !== undefined ? ethers.formatEther(totalDonation) : '0'} opBNB
           </span>
         </div>
       </div>

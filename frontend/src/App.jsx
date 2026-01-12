@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useConnect, useAccount } from 'wagmi';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -15,6 +17,7 @@ import mynncryptAbiRaw from './abis/MynnCrypt.json';
 import mynngiftAbiRaw from './abis/MynnGift.json';
 import HowItWorks from './components/HowItWorks';
 import NetworkDetector from './components/NetworkDetector';
+import LocalhostAutoSwitch from './components/LocalhostAutoSwitch';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // ✅ OPTIMIZATION: Lazy load heavy components for code splitting
@@ -95,10 +98,10 @@ const config = createConfig({
   },
 });
 
-// Buat publicClient berdasarkan config (using testnet)
-const publicClient = createPublicClient({
-  chain: opbnbTestnet,
-  transport: http('https://opbnb-testnet-rpc.bnbchain.org'),
+// Buat publicClient - akan di-update berdasarkan selected chain di AppContent
+const publicClientDefault = createPublicClient({
+  chain: hardhatLocal,
+  transport: http('http://localhost:8545'),
 });
 
 const queryClient = new QueryClient();
@@ -120,10 +123,12 @@ function App() {
             Wallet tidak terdeteksi. Fitur transaksi dinonaktifkan. Install MetaMask untuk pengalaman penuh.
           </div>
         )}
+        <LocalhostAutoSwitch />
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />
         <AppContent
           mynncryptConfig={mynncryptConfig}
           mynngiftConfig={mynngiftConfig}
-          publicClient={publicClient}
+          publicClient={publicClientDefault}
         />
       </QueryClientProvider>
     </WagmiProvider>
