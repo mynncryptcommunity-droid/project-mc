@@ -770,6 +770,14 @@ useEffect(() => {
     }
   }, [isConnected, isPlatformWallet, userId, userIdLoading, userIdError, navigate]);
 
+  // ✅ Use effective userId for platform wallet (use default referral ID)
+  const effectiveUserId = useMemo(() => {
+    if (isPlatformWallet) {
+      return 'A8888NR'; // Default platform referral ID
+    }
+    return userId;
+  }, [isPlatformWallet, userId]);
+
   // ✅ Fetch user info using userId (string ID like "A8888NR")
   // Wait for userId to be loaded before fetching userInfo
   const { 
@@ -780,8 +788,8 @@ useEffect(() => {
     address: mynncryptConfig.address,
     abi: mynncryptConfig.abi,
     functionName: 'userInfo',
-    args: userId ? [userId] : undefined,
-    enabled: !!userId,
+    args: effectiveUserId ? [effectiveUserId] : undefined,
+    enabled: !!effectiveUserId,
     watch: true,  // ✅ Enable real-time updates
   });
 

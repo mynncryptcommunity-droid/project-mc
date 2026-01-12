@@ -85,6 +85,13 @@ const mynngiftConfig = {
   abi: mynngiftAbi,
 };
 
+// ✅ Platform Wallet Configuration (owner/admin wallet across networks)
+const platformWalletConfig = {
+  hardhat: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // Hardhat first account
+  testnet: import.meta.env.VITE_PLATFORM_WALLET || '0xd442eA3d7909e8e768DcD8D7ed7e39C5D6759928',
+  mainnet: import.meta.env.VITE_PLATFORM_WALLET || '0xd442eA3d7909e8e768DcD8D7ed7e39C5D6759928',
+};
+
 const config = createConfig({
   chains: [hardhatLocal, opbnbMainnet, opbnbTestnet],  // ✅ Hardhat FIRST for local testing
   connectors: [
@@ -128,6 +135,7 @@ function App() {
         <AppContent
           mynncryptConfig={mynncryptConfig}
           mynngiftConfig={mynngiftConfig}
+          platformWalletConfig={platformWalletConfig}
           publicClient={publicClientDefault}
         />
       </QueryClientProvider>
@@ -135,7 +143,7 @@ function App() {
   );
 }
 
-function AppContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
+function AppContent({ mynncryptConfig, mynngiftConfig, platformWalletConfig, publicClient }) {
   const { isConnected } = useAccount();
   const { connectAsync, connectors } = useConnect();
   const [hasAttemptedReconnect, setHasAttemptedReconnect] = useState(false);
@@ -195,6 +203,7 @@ function AppContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
           <MainContent
             mynncryptConfig={mynncryptConfig}
             mynngiftConfig={mynngiftConfig}
+            platformWalletConfig={platformWalletConfig}
             publicClient={publicClient}
           />
         </div>
@@ -203,7 +212,7 @@ function AppContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
   );
 }
 
-function MainContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
+function MainContent({ mynncryptConfig, mynngiftConfig, platformWalletConfig, publicClient }) {
   const location = useLocation();
 
   useEffect(() => {
@@ -410,6 +419,7 @@ function MainContent({ mynncryptConfig, mynngiftConfig, publicClient }) {
                 <Dashboard
                   mynncryptConfig={mynncryptConfig}
                   mynngiftConfig={mynngiftConfig}
+                  platformWalletConfig={platformWalletConfig}
                   publicClient={publicClient}
                 />
               </div>
