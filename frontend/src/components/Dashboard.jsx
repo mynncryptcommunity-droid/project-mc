@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo_platform.png';
 import TeamMatrix from './TeamMatrix';
 import TeamTree from './TeamTree';
+import LevelDisclaimerBanner from './LevelDisclaimerBanner';
+import Tooltip from './Tooltip';
 import {
   Bars3Icon,
   XMarkIcon,
@@ -23,6 +25,8 @@ import NobleGiftVisualization from './NobleGiftVisualization';
 import MynnGiftTabs from './MynnGiftTabs';
 import Ebook from './Ebook';
 import { FaBookOpen } from 'react-icons/fa';
+import { getLevelName, getLevelInfo } from '../config/levelNamesConfig';
+import { getLevelDisclaimer } from '../config/dashboardTooltipsConfig';
 // Import the new custom hook
 // import { useNobleGiftNotifications } from '../hooks/useNobleGiftNotifications';
 
@@ -2716,6 +2720,12 @@ useEffect(() => {
       case 'dashboard':
         return (
           <div className="space-y-6">
+            {/* Level Disclaimer Banner - Top */}
+            <LevelDisclaimerBanner 
+              variant="warning"
+              className="mb-6"
+            />
+
             {/* Top Row: User Info & Level */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Card 1: Informasi Pengguna */}
@@ -2793,12 +2803,24 @@ useEffect(() => {
               <div className="bg-[#1A3A6A] w-full max-w-full p-3 sm:p-6 rounded-lg shadow-lg">
                 <h2 className="text-xl font-semibold text-[#F5C45E] mb-4">Level & Progress</h2>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span>Current Rank:</span>
-                    <span className="font-semibold text-[#F5C45E]">
-                      {userInfo?.level !== undefined ? getRankName(userInfo.level) : 'Loading...'}
-                    </span>
-                  </div>
+                  {/* Current Level Display with Icon */}
+                  {userInfo?.level !== undefined && (
+                    <div className="flex items-center gap-3 p-3 bg-[#102E50]/50 rounded-lg border border-[#F5C45E]/20 mb-4">
+                      <span className="text-3xl">
+                        {getLevelInfo(userInfo.level)?.icon || "📊"}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm text-[#4DA8DA]">Current Rank</p>
+                        <p className="text-lg font-bold text-[#F5C45E]">
+                          {getLevelName(userInfo.level)}
+                        </p>
+                        <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
+                          <span>⚠️</span>
+                          <span>{getLevelDisclaimer()}</span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span>Current Level:</span>
                     <span className="font-semibold text-[#F5C45E]">
