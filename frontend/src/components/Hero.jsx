@@ -4,6 +4,8 @@ import { injected, walletConnect } from 'wagmi/connectors';
 import { useNavigate } from 'react-router-dom';
 import metamaskLogo from '../assets/metamask-logo.svg';
 import walletconnectLogo from '../assets/walletconnect-logo.png';
+import Tooltip from './Tooltip';
+import { createTooltipProps } from '../config/tooltipsConfig';
 // Import images for slideshow
 import bnbCoinImage from '../assets/bnb_coin.png';
 import blockchainImage from '../assets/blockchain.jpg';
@@ -183,10 +185,13 @@ export default function Hero({ mynncryptConfig }) {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           {/* Text content on the left */}
           <div className="lg:w-1/2">
-            <h1 className="hero-title mb-6">
-              Welcome to Mynncrypt Community: 
-              <span className="gradient-text">The Future of Your Decentralized Finance</span>
-            </h1>
+            <div className="flex items-center gap-2 mb-6">
+              <h1 className="hero-title mb-0">
+                Welcome to Mynncrypt Community: 
+                <span className="gradient-text">The Future of Your Decentralized Finance</span>
+              </h1>
+              <Tooltip {...createTooltipProps('smartContract', 'bottom', '🔐')} />
+            </div>
             <p className="hero-subtitle mb-8">
               Are you ready to be part of the true financial revolution? 
               Mynncrypt Community is not just another DApp, it's an ecosystem 

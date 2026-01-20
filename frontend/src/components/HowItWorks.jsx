@@ -1,22 +1,59 @@
 import React, { useState } from 'react';
 
 export default function HowItWorks() {
-  const [activeTab, setActiveTab] = useState('smart-contract');
+  const [activeTab, setActiveTab] = useState('how-it-works');
+
+  const steps = [
+    {
+      number: '1️⃣',
+      title: 'Register & Connect Wallet',
+      description: 'Start by connecting your wallet and creating an account in the MynnCrypt system.'
+    },
+    {
+      number: '2️⃣',
+      title: 'Join the System',
+      description: 'Complete your registration through a smart contract interaction on the blockchain.'
+    },
+    {
+      number: '3️⃣',
+      title: 'Enter the Queue',
+      description: 'You automatically join the transparent queue system, your position is recorded on-chain.'
+    },
+    {
+      number: '4️⃣',
+      title: 'Receive Automatically',
+      description: 'When your queue position is reached, rewards are automatically distributed by the contract.'
+    },
+    {
+      number: '5️⃣',
+      title: 'Advance Through Ranks',
+      description: 'Progress through auto-promotion, unlocking higher earning potential and better benefits.'
+    }
+  ];
 
   return (
     <section className="bg-sfc-dark-blue text-sfc-cream min-h-screen py-20">
       <div className="container mx-auto px-4">
-        <h1 className="text-5xl font-bold text-center mb-12">
-          <span className="gradient-text">How Does It Work?</span>
+        <h1 className="text-5xl font-bold text-center mb-4">
+          <span className="gradient-text">HOW IT WORKS</span>
         </h1>
+        <p className="text-center text-sfc-gold mb-12 text-lg font-semibold">
+          All processes are handled entirely by smart contracts.
+        </p>
 
         <div className="tab-container mb-10">
           <div className="flex justify-center gap-4 mb-8">
             <button 
+              className={`tab-button ${activeTab === 'how-it-works' ? 'active' : ''}`}
+              onClick={() => setActiveTab('how-it-works')}
+            >
+              5-Step Process
+            </button>
+            <button 
               className={`tab-button ${activeTab === 'smart-contract' ? 'active' : ''}`}
               onClick={() => setActiveTab('smart-contract')}
             >
-              Mynncrypt Smart Contract
+              Smart Contract
             </button>
             <button 
               className={`tab-button ${activeTab === 'mynngift' ? 'active' : ''}`}
@@ -33,6 +70,30 @@ export default function HowItWorks() {
           </div>
 
           <div className="content-container">
+            {activeTab === 'how-it-works' && (
+              <div className="space-y-6">
+                {steps.map((step, index) => (
+                  <div key={index} className="feature-card border-l-4 border-sfc-gold">
+                    <div className="flex items-start gap-4">
+                      <span className="text-4xl flex-shrink-0">{step.number}</span>
+                      <div>
+                        <h3 className="feature-title mb-2">{step.title}</h3>
+                        <p className="text-sfc-cream/90">{step.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="mt-8 p-6 bg-gradient-to-r from-sfc-gold/10 to-sfc-cream/5 border-2 border-sfc-gold/40 rounded-lg">
+                  <p className="text-center text-lg font-semibold text-sfc-gold">
+                    ✅ All processes are handled entirely by smart contracts.
+                  </p>
+                  <p className="text-center text-sfc-cream/80 mt-2">
+                    No intermediaries, no manual approval, just automated blockchain execution.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'smart-contract' && (
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="feature-card">

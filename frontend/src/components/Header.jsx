@@ -7,6 +7,8 @@ import metamaskLogo from '../assets/metamask-logo.svg';
 import trustwalletLogo from '../assets/trustwallet-logo.svg';
 import GooeyNav from './GooeyNav';
 import LoadingSpinner from './LoadingSpinner';
+import Tooltip from './Tooltip';
+import { createTooltipProps } from '../config/tooltipsConfig';
 
 export default function Header({ mynncryptConfig }) {
   const [showModal, setShowModal] = useState(false);
@@ -1141,7 +1143,10 @@ export default function Header({ mynncryptConfig }) {
         <div className="header-container">
           <div className="logo-title-container">
             <img src={logo} alt="Mynncrypt Logo" className="logo-img" />
-            <span className="header-title">Mynncrypt Community</span>
+            <div className="flex items-center gap-2">
+              <span className="header-title">Mynncrypt Community</span>
+              <Tooltip {...createTooltipProps('global', 'bottom', '🛡️')} />
+            </div>
           </div>
           <div className="header-row">
             <GooeyNav 
