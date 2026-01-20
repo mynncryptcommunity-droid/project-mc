@@ -2837,7 +2837,7 @@ useEffect(() => {
     style={{ minHeight: 40 }}
   >
     {selectedUpgradeLevel && selectedUpgradeLevel > 0
-      ? `Level ${selectedUpgradeLevel}`
+      ? `Level ${selectedUpgradeLevel} - ${getLevelName(selectedUpgradeLevel)}`
       : 'Select Level'}
     <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -2865,7 +2865,11 @@ useEffect(() => {
               }
             }}
           >
-            Level {levelOption} {!isNextLevelOnly && '(complete level ' + (levelOption - 1) + ' first)'}
+            <div className="flex items-center gap-2">
+              <span>{getLevelInfo(levelOption)?.icon}</span>
+              <span>Level {levelOption} - {getLevelName(levelOption)}</span>
+            </div>
+            {!isNextLevelOnly && <span className="text-xs">(complete level {levelOption - 1} first)</span>}
           </div>
         );
       })}
