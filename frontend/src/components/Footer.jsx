@@ -8,9 +8,9 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8">
           <div className="col-span-2">
-            <h3 className="text-2xl font-bold text-sfc-cream mb-4">MC Dapps</h3>
+            <h3 className="text-2xl font-bold text-sfc-cream mb-4">Mynncrypt Community</h3>
             <p className="text-sfc-cream/80 mb-4 max-w-md">
-              The leading DApps platform that connects you with the future of decentralized finance.
+              Decentralized Community Reward Protocol.
             </p>
             <div className="flex space-x-4">
               <button className="border border-sfc-cream/20 text-sfc-cream hover:bg-sfc-gold/20 px-4 py-2 rounded-lg transition-colors">
@@ -26,27 +26,19 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sfc-cream font-semibold mb-4">Platform</h4>
+            <h4 className="text-sfc-cream font-semibold mb-4">Features</h4>
             <ul className="space-y-2 text-sfc-cream/80">
-              <li>
-                <a href="#" className="hover:text-sfc-gold transition-colors">
-                  Swap
-                </a>
+              <li className="cursor-default">
+                Community Distribution
               </li>
-              <li>
-                <a href="#" className="hover:text-sfc-gold transition-colors">
-                  Liquidity
-                </a>
+              <li className="cursor-default">
+                Mynngift Program
               </li>
-              <li>
-                <a href="#" className="hover:text-sfc-gold transition-colors">
-                  Farming
-                </a>
+              <li className="cursor-default">
+                Sponsor Relationship
               </li>
-              <li>
-                <a href="#" className="hover:text-sfc-gold transition-colors">
-                  Staking
-                </a>
+              <li className="cursor-default">
+                Live System Dashboard
               </li>
             </ul>
           </div>

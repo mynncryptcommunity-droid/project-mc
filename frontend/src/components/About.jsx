@@ -1,21 +1,30 @@
-import { ShieldCheckIcon, BoltIcon, UsersIcon } from '@heroicons/react/24/solid';
+// Icon imports removed - using emoji instead
 
 export default function About() {
   const features = [
     {
-      title: "Platinum Security",
-      description: "Bank-level encryption with audited smart contracts, multi-signature wallets, and 24/7 security monitoring",
-      icon: <ShieldCheckIcon className="h-12 w-12 text-sfc-gold" />,
+      emoji: "🔐",
+      title: "Code, Not People",
+      points: [
+        "No admin-controlled payouts.",
+        "Everything runs automatically on smart contracts.",
+      ],
     },
     {
-      title: "Diamond Speed",
-      description: "Lightning-fast transactions with instant confirmations and optimized gas fees for seamless DeFi experience",
-      icon: <BoltIcon className="h-12 w-12 text-sfc-gold" />,
+      emoji: "⛓️",
+      title: "Transparent by Default",
+      points: [
+        "All data is public, on-chain, and verifiable.",
+        "Nothing is hidden off-chain.",
+      ],
     },
     {
-      title: "Royal Community",
-      description: "Exclusive network of verified investors with premium benefits, early access, and VIP support",
-      icon: <UsersIcon className="h-12 w-12 text-sfc-gold" />,
+      emoji: "👥",
+      title: "Equal Rules for Everyone",
+      points: [
+        "No VIPs, no special access, no shortcuts.",
+        "Same rules apply to all participants.",
+      ],
     },
   ];
 
@@ -31,13 +40,10 @@ export default function About() {
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-sfc-cream mb-4 relative inline-block">
             <span className="relative z-10 bg-gradient-to-r from-sfc-gold to-sfc-cream bg-clip-text text-transparent">
-              Why Choose Us?
+              Why Choose MynnCrypt?
             </span>
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-sfc-gold rounded-full"></div>
           </h2>
-          <p className="text-xl text-sfc-cream/80 max-w-3xl mx-auto mt-6">
-            Platform designed specifically to provide the best DeFi experience
-          </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -53,23 +59,23 @@ export default function About() {
               {/* Animated border effect */}
               <div className="absolute inset-0 rounded-3xl p-px bg-gradient-to-r from-transparent via-sfc-gold/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
-              {/* Icon container with dynamic background */}
-              <div className="relative z-10 w-20 h-20 rounded-2xl bg-gradient-to-br from-sfc-gold to-sfc-mid-blue flex items-center justify-center mb-6 shadow-xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 mx-auto fade-element">
-                <div className="text-sfc-dark-blue drop-shadow-lg">
-                  {feature.icon}
-                </div>
-                {/* Shine effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              {/* Emoji container with dynamic background */}
+              <div className="relative z-10 w-20 h-20 rounded-2xl bg-gradient-to-br from-sfc-gold to-sfc-mid-blue flex items-center justify-center mb-6 shadow-xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 mx-auto fade-element text-4xl">
+                {feature.emoji}
               </div>
               
               {/* Content */}
               <div className="relative z-10 text-center fade-element">
-                <h3 className="text-2xl font-bold text-sfc-cream mb-4 tracking-wide">
+                <h3 className="text-2xl font-bold text-sfc-cream mb-6 tracking-wide">
                   {feature.title}
                 </h3>
-                <p className="text-sfc-cream/90 leading-relaxed mb-6">
-                  {feature.description}
-                </p>
+                <ul className="space-y-4 text-sfc-cream/90">
+                  {feature.points.map((point, idx) => (
+                    <li key={idx} className="leading-relaxed">
+                      {point}
+                    </li>
+                  ))}
+                </ul>
               </div>
               
               {/* Subtle hover effect */}

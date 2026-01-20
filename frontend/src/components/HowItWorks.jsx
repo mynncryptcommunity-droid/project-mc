@@ -42,12 +42,18 @@ export default function HowItWorks() {
         </p>
 
         <div className="tab-container mb-10">
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex justify-center gap-4 mb-8 flex-wrap">
             <button 
               className={`tab-button ${activeTab === 'how-it-works' ? 'active' : ''}`}
               onClick={() => setActiveTab('how-it-works')}
             >
               5-Step Process
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'streams' ? 'active' : ''}`}
+              onClick={() => setActiveTab('streams')}
+            >
+              Two Streams
             </button>
             <button 
               className={`tab-button ${activeTab === 'smart-contract' ? 'active' : ''}`}
@@ -89,6 +95,113 @@ export default function HowItWorks() {
                   </p>
                   <p className="text-center text-sfc-cream/80 mt-2">
                     No intermediaries, no manual approval, just automated blockchain execution.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'streams' && (
+              <div className="space-y-8">
+                <div className="text-center mb-8">
+                  <h2 className="text-4xl font-bold text-sfc-gold mb-4">🔁 TWO STREAMS — ONE SYSTEM</h2>
+                  <p className="text-sfc-cream/80 text-lg">Choose your path. Users can join one or both streams.</p>
+                </div>
+
+                {/* Stream A */}
+                <div className="feature-card border-t-4 border-sfc-gold">
+                  <h3 className="text-2xl font-bold text-sfc-gold mb-4 flex items-center gap-2">
+                    🔹 Stream A — Community Entry Stream
+                  </h3>
+                  <div className="space-y-3 text-sfc-cream/90">
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">✓</span>
+                      <div>
+                        <p className="font-semibold">Low entry</p>
+                        <p className="text-sm text-sfc-cream/70">Easy access for everyone</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">✓</span>
+                      <div>
+                        <p className="font-semibold">Designed for new participants</p>
+                        <p className="text-sm text-sfc-cream/70">Perfect starting point</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">✓</span>
+                      <div>
+                        <p className="font-semibold">Community rotation-based rewards</p>
+                        <p className="text-sm text-sfc-cream/70">Fair queue-based distribution</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">✓</span>
+                      <div>
+                        <p className="font-semibold">Automatic rank progression</p>
+                        <p className="text-sm text-sfc-cream/70">No manual approval needed</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">✓</span>
+                      <div>
+                        <p className="font-semibold">Best for learning and steady participation</p>
+                        <p className="text-sm text-sfc-cream/70">Build knowledge & grow steadily</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stream B */}
+                <div className="feature-card border-t-4 border-sfc-gold">
+                  <h3 className="text-2xl font-bold text-sfc-gold mb-4 flex items-center gap-2">
+                    🔹 Stream B — Accelerator Stream
+                  </h3>
+                  <div className="space-y-3 text-sfc-cream/90">
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">⚡</span>
+                      <div>
+                        <p className="font-semibold">Higher entry</p>
+                        <p className="text-sm text-sfc-cream/70">For committed participants</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">⚡</span>
+                      <div>
+                        <p className="font-semibold">Faster rotation</p>
+                        <p className="text-sm text-sfc-cream/70">Quick queue movement</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">⚡</span>
+                      <div>
+                        <p className="font-semibold">Higher reward potential</p>
+                        <p className="text-sm text-sfc-cream/70">Greater earning capacity</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">⚡</span>
+                      <div>
+                        <p className="font-semibold">Independent from Stream A</p>
+                        <p className="text-sm text-sfc-cream/70">Separate queue system</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">⚡</span>
+                      <div>
+                        <p className="font-semibold">Built for advanced users seeking higher throughput</p>
+                        <p className="text-sm text-sfc-cream/70">Maximize participation & rewards</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Choice Box */}
+                <div className="p-6 bg-gradient-to-r from-sfc-gold/10 to-sfc-cream/5 border-2 border-sfc-gold/40 rounded-lg">
+                  <p className="text-center text-lg font-semibold text-sfc-gold">
+                    🎯 Choose Your Path
+                  </p>
+                  <p className="text-center text-sfc-cream/80 mt-2">
+                    Users can join one or both streams independently. Both are transparent, automated, and on-chain.
                   </p>
                 </div>
               </div>

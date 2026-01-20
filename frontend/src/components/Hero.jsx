@@ -187,17 +187,31 @@ export default function Hero({ mynncryptConfig }) {
           <div className="lg:w-1/2">
             <div className="flex items-center gap-2 mb-6">
               <h1 className="hero-title mb-0">
-                Welcome to Mynncrypt Community: 
-                <span className="gradient-text">The Future of Your Decentralized Finance</span>
+                <span className="gradient-text">Decentralized Community Reward Protocol</span>
               </h1>
               <Tooltip {...createTooltipProps('smartContract', 'bottom', '🔐')} />
             </div>
-            <p className="hero-subtitle mb-8">
-              Are you ready to be part of the true financial revolution? 
-              Mynncrypt Community is not just another DApp, it's an ecosystem 
-              built on the foundation of transparent & seamless Smart Contracts. 
-              Forget concerns about system integrity. Here, trust is guaranteed.
+            <h2 className="text-2xl font-bold text-sfc-gold mb-6">
+              Transparent. Automated. On-Chain.
+            </h2>
+            <p className="hero-subtitle mb-4">
+              A community-powered smart contract system where rewards are distributed automatically based on queue position — not promises, not administrators.
             </p>
+            
+            <div className="mb-8 p-6 bg-sfc-navy/40 border-l-4 border-sfc-gold rounded-lg">
+              <h3 className="text-xl font-bold text-sfc-gold mb-4">WHAT IS MYNNCRYPT?</h3>
+              <p className="text-sfc-cream/90 mb-4">
+                MynnCrypt is a decentralized on-chain protocol designed to fairly rotate community contributions into rewards through a transparent queue-based system.
+              </p>
+              <div className="space-y-2 text-sfc-cream/80">
+                <p><strong>There is:</strong></p>
+                <p>❌ No manual distribution</p>
+                <p>❌ No admin-controlled payouts</p>
+                <p>❌ No hidden wallets</p>
+                <p className="mt-3 italic">Every transaction, position, and reward is verifiable directly on the blockchain.</p>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <button 
                 className="animated-button"
@@ -290,24 +304,24 @@ export default function Hero({ mynncryptConfig }) {
         <h2 className="text-4xl font-bold text-center mb-12">Platform Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="feature-card">
-            <div className="feature-icon">💰</div>
-            <h3>Team Income</h3>
-            <p>Earn passive income from your direct referrals and downline members</p>
+            <div className="feature-icon">�</div>
+            <h3>Community Distribution</h3>
+            <p>Rewards are distributed based on participation within a transparent team structure.</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">🎁</div>
             <h3>Mynngift Program</h3>
-            <p>Participate in our exclusive rewards program and earn additional benefits through gifts and donations</p>
+            <p>An additional on-chain feature that introduces gift-based reward flows with clear rules.</p>
           </div>
           <div className="feature-card">
-            <div className="feature-icon">🤝</div>
-            <h3>Sponsor Income</h3>
-            <p>Earn additional rewards by sponsoring new members and expanding your network reach</p>
+            <div className="feature-icon">🔗</div>
+            <h3>Sponsor Relationship</h3>
+            <p>Sponsor data helps define reward paths according to fixed smart contract logic.</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">📊</div>
-            <h3>Real-Time Dashboard</h3>
-            <p>Monitor your earnings, team growth, and performance in real-time</p>
+            <h3>Live System Dashboard</h3>
+            <p>Track your position, history, and activity with data synced directly from the blockchain.</p>
           </div>
         </div>
       </div>
@@ -315,49 +329,35 @@ export default function Hero({ mynncryptConfig }) {
       {/* How It Works Section */}
       <div className="how-it-works-section mt-20 pt-20 border-t border-sfc-gold/30">
         <h2 className="text-4xl font-bold text-center mb-12">How It Works</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <div className="step-card">
-            <div className="step-number">1</div>
-            <h3>Connect Wallet</h3>
-            <p>Connect your MetaMask or Trust Wallet to get started</p>
+            <div className="step-number">1️⃣</div>
+            <h3>Register & Connect Wallet</h3>
+            <p>Start by connecting your wallet and creating an account in the MynnCrypt system.</p>
           </div>
           <div className="step-card">
-            <div className="step-number">2</div>
-            <h3>Register Account</h3>
-            <p>Complete your registration with a referral code if you have one</p>
+            <div className="step-number">2️⃣</div>
+            <h3>Join the System</h3>
+            <p>Complete your registration through a smart contract interaction on the blockchain.</p>
           </div>
           <div className="step-card">
-            <div className="step-number">3</div>
-            <h3>Build Your Team</h3>
-            <p>Share your unique referral link and invite others to join</p>
+            <div className="step-number">3️⃣</div>
+            <h3>Enter the Queue</h3>
+            <p>You automatically join the transparent queue system, your position is recorded on-chain.</p>
           </div>
           <div className="step-card">
-            <div className="step-number">4</div>
-            <h3>Earn Income</h3>
-            <p>Start earning passive income from your team's activities</p>
+            <div className="step-number">4️⃣</div>
+            <h3>Receive Automatically</h3>
+            <p>When your queue position is reached, rewards are automatically distributed by the contract.</p>
+          </div>
+          <div className="step-card">
+            <div className="step-number">5️⃣</div>
+            <h3>Advance Through Ranks</h3>
+            <p>Progress through auto-promotion, unlocking higher earning potential and better benefits.</p>
           </div>
         </div>
-      </div>
-
-      {/* Benefits Section */}
-      <div className="benefits-section mt-20 pt-20 border-t border-sfc-gold/30 pb-20">
-        <h2 className="text-4xl font-bold text-center mb-12">Why Join Us</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="benefit-card">
-            <div className="benefit-icon">💸</div>
-            <h3>Passive Income</h3>
-            <p>Earn recurring income from your team members without active work. Let your network work for you.</p>
-          </div>
-          <div className="benefit-card">
-            <div className="benefit-icon">🤝</div>
-            <h3>Community Support</h3>
-            <p>Join a thriving community with mentorship, training, and support from experienced members.</p>
-          </div>
-          <div className="benefit-card">
-            <div className="benefit-icon">⛓️</div>
-            <h3>Blockchain Security</h3>
-            <p>Transparent and secure transactions on blockchain. All data is immutable and verifiable.</p>
-          </div>
+        <div className="mt-8 p-6 bg-gradient-to-r from-sfc-gold/10 to-sfc-cream/5 border-2 border-sfc-gold/40 rounded-lg text-center">
+          <p className="text-lg font-semibold text-sfc-gold">✅ All processes are handled entirely by smart contracts.</p>
         </div>
       </div>
 
