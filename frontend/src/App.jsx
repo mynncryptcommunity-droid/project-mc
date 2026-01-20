@@ -13,6 +13,7 @@ import About from './components/About';
 import Testimoni from './components/Testimoni';
 import Footer from './components/Footer';
 import Register from './components/Register';
+import FAQ from './components/FAQ';
 import mynncryptAbiRaw from './abis/MynnCrypt.json';
 import mynngiftAbiRaw from './abis/MynnGift.json';
 import HowItWorks from './components/HowItWorks';
@@ -454,6 +455,10 @@ function MainContent({ mynncryptConfig, mynngiftConfig, platformWalletConfig, pu
         <Route
           path="/how-it-works"
           element={<div className="page-transition"><HowItWorks /></div>}
+        />
+        <Route
+          path="/faq"
+          element={<div className="page-transition"><FAQ /></div>}
         />
       </Routes>
     </>

@@ -1,4 +1,8 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function Footer() {
+  const navigate = useNavigate();
+
   return (
     <footer className="bg-sfc-dark-blue/80 border-t border-sfc-cream/10 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,9 +60,12 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-sfc-gold transition-colors">
-                  FAQ
-                </a>
+                <button 
+                  onClick={() => navigate('/faq')}
+                  className="hover:text-sfc-gold transition-colors text-left"
+                >
+                  🛡️ Anti-Scam FAQ
+                </button>
               </li>
               <li>
                 <a href="#" className="hover:text-sfc-gold transition-colors">

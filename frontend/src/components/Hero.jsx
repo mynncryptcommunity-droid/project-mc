@@ -212,6 +212,16 @@ export default function Hero({ mynncryptConfig }) {
                 <svg className="arr-1" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 <svg className="arr-2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </button>
+              <button 
+                className="animated-button faq-button"
+                onClick={() => navigate('/faq')}
+                title="View Anti-Scam FAQ"
+              >
+                <span className="circle"></span>
+                <span className="text">➡️ Anti-Scam FAQ</span>
+                <svg className="arr-1" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <svg className="arr-2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
             </div>
           </div>
           
