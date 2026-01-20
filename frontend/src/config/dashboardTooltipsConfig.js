@@ -85,6 +85,13 @@ const dashboardTooltips = {
     position: "top"
   },
 
+  // 🔟 LEVEL DISCLAIMER - CRITICAL
+  levelDisclaimer: {
+    text: "Level represents mining progression, not guaranteed outcomes.",
+    position: "bottom",
+    priority: "critical"
+  },
+
   // 🔟 ADDITIONAL TOOLTIPS FOR REINFORCEMENT
   smartContractAddress: {
     text: "Contract addresses are permanent on-chain records.\nYou can verify them on blockchain explorer anytime.",
@@ -134,8 +141,15 @@ export const createDashboardTooltipProps = (key, position = null) => {
     text: tooltip.text,
     link: tooltip.link || null,
     position: position || tooltip.position || "top",
-    isPriority: tooltip.priority === "high"
+    isPriority: tooltip.priority === "high" || tooltip.priority === "critical"
   };
+};
+
+/**
+ * Get level disclaimer text
+ */
+export const getLevelDisclaimer = () => {
+  return dashboardTooltips.levelDisclaimer.text;
 };
 
 /**
