@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useConnect, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { injected, walletConnect } from 'wagmi/connectors';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Tooltip from './Tooltip';
+import { createTooltipProps } from '../config/tooltipsConfig';
 
 export default function Register({ mynncryptConfig }) {
   const [showModal, setShowModal] = useState(false);
@@ -310,7 +312,12 @@ export default function Register({ mynncryptConfig }) {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
       <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-4">Registrasi</h1>
+        <div className="flex items-center gap-3 mb-4">
+          <h1 className="text-2xl font-bold">Registrasi</h1>
+          <Tooltip 
+            {...createTooltipProps('register', 'bottom', '🛡️')}
+          />
+        </div>
         {!isConnected && (
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-2"
