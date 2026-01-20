@@ -1475,7 +1475,10 @@ useEffect(() => {
         value: cumulativeCost,
         args: [userId, BigInt(targetLevel - currentLevel)], // Pass userId and number of levels to upgrade
       });
-      toast.success(`Successfully upgraded to Level ${targetLevel}!`);
+      
+      const levelName = getLevelName(targetLevel);
+      const levelIcon = getLevelInfo(targetLevel)?.icon || "📊";
+      toast.success(`Successfully upgraded to ${levelIcon} Level ${targetLevel} - ${levelName}!`);
 
       // Refetch user info to get the updated level
       await refetchUserInfo();
@@ -1483,7 +1486,17 @@ useEffect(() => {
 
       // Check if the new level is 4 or more after successful upgrade
       if (previousLevel < 4 && targetLevel >= 4) { // Check if previous level was below 4 and new level is 4 or higher
-        toast.success('Congratulations! You are now eligible for MynnGift!');
+        toast.success('🎉 Congratulations! You are now eligible for MynnGift!');
+      }
+      
+      // Check if reached Stream B (level 8)
+      if (previousLevel < 8 && targetLevel >= 8) {
+        toast.success('🔥 Awesome! You have unlocked Stream B - Royalty Claims!');
+      }
+      
+      // Check if reached Master Miner (level 12)
+      if (previousLevel < 12 && targetLevel >= 12) {
+        toast.success('👑 Incredible! You have reached Master Miner - Maximum Level!');
       }
     } catch (error) {
       console.error('Upgrade failed:', error);
