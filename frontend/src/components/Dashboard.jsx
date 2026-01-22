@@ -1914,7 +1914,7 @@ useEffect(() => {
     // Detect environment - support localhost for testing
     const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? `http://${window.location.hostname}:${window.location.port}`
-      : 'https://project-mc-tan.vercel.app';
+      : 'https://mynncrypt.com';
     
     const referralLink = `${baseUrl}/register?ref=${userId}`;
     navigator.clipboard.writeText(referralLink).then(() => {
@@ -2796,7 +2796,7 @@ useEffect(() => {
                           <a href={(() => {
                             const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                               ? `http://${window.location.hostname}:${window.location.port}`
-                              : 'https://project-mc-tan.vercel.app';
+                              : 'https://mynncrypt.com';
                             return `https://wa.me/?text=Join%20Smart%20Mynncrypt%20Community%20using%20my%20referral%20link:%20${encodeURIComponent(baseUrl)}/register?ref=${userId}`;
                           })()} target="_blank" rel="noopener noreferrer">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
