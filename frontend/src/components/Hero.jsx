@@ -20,6 +20,7 @@ export default function Hero({ mynncryptConfig }) {
   const [registerMessage, setRegisterMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(true);
   const [referralId, setReferralId] = useState('');
+  const [isJoinButtonDisabled, setIsJoinButtonDisabled] = useState(true);
   const { address, isConnected, isConnecting } = useAccount();
   const { connect, error: connectError } = useConnect();
   const { 
@@ -225,6 +226,7 @@ export default function Hero({ mynncryptConfig }) {
               <button 
                 className="animated-button join-now-hero-button"
                 onClick={handleJoinClick}
+                disabled={isJoinButtonDisabled}
               >
                 <span className="circle"></span>
                 <span className="text">Join Now</span>
@@ -578,6 +580,25 @@ export default function Hero({ mynncryptConfig }) {
             0 0 15px rgba(221, 168, 83, 0.4),
             0 0 30px rgba(255, 215, 0, 0.15),
             0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .join-now-hero-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+          background: linear-gradient(135deg, #B8860B 0%, #996B00 50%, #8B6914 100%);
+          color: #A9935C;
+          border-color: #8B7355;
+        }
+        .join-now-hero-button:disabled:hover {
+          background: linear-gradient(135deg, #B8860B 0%, #996B00 50%, #8B6914 100%);
+          color: #A9935C;
+          transform: none;
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+          border-color: #8B7355;
+        }
+        .join-now-hero-button:disabled:active {
+          transform: none;
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
         }
         @keyframes pulse-glow {
           0%, 100% {
