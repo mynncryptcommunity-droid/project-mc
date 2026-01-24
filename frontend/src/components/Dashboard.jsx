@@ -3492,7 +3492,7 @@ useEffect(() => {
                 value={(() => {
                   const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                     ? `http://${window.location.hostname}:${window.location.port}`
-                    : 'https://project-mc-tan.vercel.app';
+                    : 'https://mynncrypt.com';
                   return `${baseUrl}/register?ref=${userId}`;
                 })()}
                 readOnly
